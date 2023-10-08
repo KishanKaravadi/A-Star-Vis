@@ -4,6 +4,7 @@ import random
 from queue import PriorityQueue
 
 WIDTH = 800
+Q = 1
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("A* Path Finding Algorithm")
 
@@ -21,6 +22,7 @@ TURQUOISE = (64, 224, 208)
 BROWN = (79, 46, 13)
 
 
+
 class Spot:
     def __init__(self, row, col, width, total_rows) -> None:
         self.row = row
@@ -33,6 +35,7 @@ class Spot:
         self.width = width
         self.total_rows = total_rows
         self.num_white_nei = 0
+        self.num_fire_nei = 0
 
     def get_pos(self):
         return self.row, self.col
@@ -89,6 +92,7 @@ class Spot:
     def update_neighbors(self, grid):
         self.neighbors = []
         # DOWN
+        #need to check the is_fire node with the set of fire cells, we can change is_fire to do this
         if self.row < self.total_rows - 1 and not (grid[self.row + 1][self.col].is_barrier() or grid[self.row + 1][self.col].is_fire()):
             self.neighbors.append(grid[self.row + 1][self.col])
         # UP
@@ -132,15 +136,14 @@ def reconstruct_path(came_from, current, draw):
         current.make_path()
         draw()
 
-
-def algorithm(draw, grid, start, end):
+def algorithm(draw, grid, start, end, orange, white, Q):
     count = 0
 
     # frontier
     open_set = PriorityQueue()
     open_set.put((0, count, start))
     came_from = {}
-
+    
     # heuristic
     g_score = {spot: float('inf') for row in grid for spot in row}
     g_score[start] = 0
@@ -151,10 +154,41 @@ def algorithm(draw, grid, start, end):
     open_set_hash = {start}
 
     while not open_set.empty():
+        pygame.time.delay(100)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
+        # update board here using a method that updates entire board based on fire
+        # must be done here so that current doesn't equal a fire cell
+        #print(orange)
+        if orange:
+            cell = orange.pop()
+            # if cell in open_set.queue:
+            #     open_set.queue.remove(cell)
+            for orange_nei in cell.unres_neighbors:
+                #print(orange_nei.num_fire_nei)
+                if orange_nei.get_color()!=BLACK and random.random() <= 1:
+                    if orange_nei.is_end() or orange_nei.is_start() or orange_nei.get_color==PURPLE: 
+                        orange_nei.make_color==BROWN
+                        draw()
+                        #print("HURIBUIBFBFO")
+                        return False 
+                    orange_nei.make_color(ORANGE)
+                    for orange_neinei in orange_nei.neighbors:
+                        orange_neinei.num_fire_nei+=1
+                    orange.add(orange_nei)
+                    if orange_nei in white:
+                        white.remove(orange_nei)
+                    for tup in open_set.queue:
+                        #print(tup[2].get_pos)
+                        if orange_nei in tup:
+                            print("removed")
+                            print((tup[2].row,tup[2].col))
+                            open_set.queue.remove(tup)
+                            open_set_hash.remove(orange_nei)
+        #fulfills set of fire nodes (fire nodes should store their neighbors' locations for #3)
+        
         current = open_set.get()[2]
         open_set_hash.remove(current)
 
@@ -215,6 +249,7 @@ def make_ship(draw, grid, rows):
     green = {start}
     red = set()
     brown = set()
+    orange = set()
 
     while green:
         # Pop the current one
@@ -240,7 +275,7 @@ def make_ship(draw, grid, rows):
                 green.remove(cell)
                 red.add(cell)
         draw()
-        # pygame.time.delay(2000)
+        #pygame.time.delay(500)
 
     # Check for deadends
     for cell in white:
@@ -250,7 +285,7 @@ def make_ship(draw, grid, rows):
             cell.make_color(BROWN)
 
         draw()
-        # pygame.time.delay(2000)
+        #pygame.time.delay(500)
 
     # Half of the deadends get checked and made into cycles
     for _ in range(len(brown)//2):
@@ -264,7 +299,7 @@ def make_ship(draw, grid, rows):
                     neinei.num_white_nei += 1
                 break
         deadend.make_color(WHITE)
-        # pygame.time.delay(2000)
+        #pygame.time.delay(2000)
     draw()
     # pygame.time.delay(1000)
 
@@ -274,12 +309,12 @@ def make_ship(draw, grid, rows):
         leftover.make_color(WHITE)
 
     draw()
-    # pygame.time.delay(1000)
+    #pygame.time.delay(1000)
     while red:
         temp = red.pop()
         temp.make_color(BLACK)
 
-    # pygame.time.delay(1000)
+    #pygame.time.delay(1000)
     draw()
 
     random_bot = random.choice(list(white))
@@ -290,10 +325,15 @@ def make_ship(draw, grid, rows):
 
     random_fire = random.choice(list(white - {random_bot, random_button}))
     random_fire.make_color(ORANGE)
+    for firecell in random_fire.neighbors:
+        firecell.num_fire_nei+=1
+    #need to add to set of fire nodes
+    orange.add(random_fire)
+    white.remove(random_fire)
 
     draw()
 
-    return (random_bot, random_button, random_fire)
+    return (random_bot, random_button, random_fire, orange, white)
 
 
 def draw_grid_lines(win, rows, width):
@@ -328,7 +368,7 @@ def get_clicked_pos(pos, rows, width):
 def main(win, width):
     ROWS = 10
     grid = make_grid(ROWS, width)
-    random_bot, random_button, random_fire = make_ship(
+    random_bot, random_button, random_fire, orange, white = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS)
 
     start = random_bot
@@ -389,8 +429,8 @@ def main(win, width):
                     for row in grid:
                         for spot in row:
                             spot.update_neighbors(grid)
-                    algorithm(lambda: draw(win, grid, ROWS, width),
-                              grid, start, end)
+                    print("True") if algorithm(lambda: draw(win, grid, ROWS, width),
+                              grid, start, end, orange, white, Q) else print("False")
 
                 if event.key == pygame.K_c:
                     start = None
