@@ -154,7 +154,7 @@ def algorithm(draw, grid, start, end, orange, white, Q):
     open_set_hash = {start}
 
     while not open_set.empty():
-        pygame.time.delay(100)
+        pygame.time.delay(1000)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -170,8 +170,8 @@ def algorithm(draw, grid, start, end, orange, white, Q):
                 #print(orange_nei.num_fire_nei)
                 if orange_nei.get_color()!=BLACK and random.random() <= 1:
                     if orange_nei.is_end() or orange_nei.is_start() or orange_nei.get_color==PURPLE: 
-                        orange_nei.make_color==BROWN
-                        draw()
+                        #orange_nei.make_color==BROWN
+                        #draw()
                         #print("HURIBUIBFBFO")
                         return False 
                     orange_nei.make_color(ORANGE)
@@ -206,7 +206,7 @@ def algorithm(draw, grid, start, end, orange, white, Q):
                 g_score[neighbor] = temp_g_score
                 f_score[neighbor] = temp_g_score + \
                     h(neighbor.get_pos(), end.get_pos())
-                if neighbor not in open_set_hash:
+                if neighbor not in open_set_hash and not neighbor.is_fire():
                     count += 1
                     open_set.put((f_score[neighbor], count, neighbor))
                     open_set_hash.add(neighbor)
@@ -373,7 +373,10 @@ def main(win, width):
 
     start = random_bot
     end = random_button
-    print(random_bot)
+    #print((random_bot.get_pos()[0],random_bot.get_pos()[1]))
+    print((random_fire.get_pos()[0],random_fire.get_pos()[1]))
+    for nei in random_fire.neighbors:
+        print((nei.get_pos()[0],nei.get_pos()[1]))
 
     run = True
     while run:
