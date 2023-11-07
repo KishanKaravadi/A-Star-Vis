@@ -22,7 +22,7 @@ TURQUOISE = (64, 224, 208)
 BROWN = (79, 46, 13)
 
 
-#D = 3
+# D = 3
 
 class Spot:
     def __init__(self, row, col, width, total_rows) -> None:
@@ -37,7 +37,7 @@ class Spot:
         self.width = width
         self.total_rows = total_rows
         self.num_white_nei = 0
-        #self.path = False
+        # self.path = False
         self.fire = False
 
     def get_pos(self):
@@ -66,10 +66,10 @@ class Spot:
 
     def is_path(self):
         return self.color == PURPLE
-    
+
     def reset(self):
         self.color = WHITE
-        #self.path = False
+        # self.path = False
 
     def make_color(self, color) -> None:
         self.color = color
@@ -91,41 +91,41 @@ class Spot:
 
     def make_fire(self):
         self.fire = True
-    
+
     def make_end(self):
         self.color = GREEN_YELLOW
 
     def make_path(self):
         self.color = PURPLE
-    
+
     def adj_fire(self, grid):
         adjfire = False
         # DOWN
         if self.row < self.total_rows - 1 and (grid[self.row + 1][self.col].is_fire()):
-            #print(grid[self.row + 1][self.col].is_fire(), "really")
+            # print(grid[self.row + 1][self.col].is_fire(), "really")
             adjfire = True
         # UP
         if self.row > 0 and (grid[self.row - 1][self.col].is_fire()):
-            #print(grid[self.row - 1][self.col].is_fire(), "really")
+            # print(grid[self.row - 1][self.col].is_fire(), "really")
             adjfire = True
         # RIGHT
         if self.col < self.total_rows - 1 and (grid[self.row][self.col + 1].is_fire()):
-            #print(grid[self.row][self.col+1].is_fire(), "really")
+            # print(grid[self.row][self.col+1].is_fire(), "really")
             adjfire = True
         # LEFT
         if self.col > 0 and (grid[self.row][self.col - 1].is_fire()):
-            #print(grid[self.row][self.col -1].is_fire(), "really")
+            # print(grid[self.row][self.col -1].is_fire(), "really")
             adjfire = True
 
         if adjfire:
             pass
-            #print(self.get_pos())
+            # print(self.get_pos())
         return adjfire
 
     def draw(self, win):
         pygame.draw.rect(
             win, self.color, (self.x, self.y, self.width, self.width))
-        if(self.fire):
+        if (self.fire):
             pygame.draw.rect(
                 win, ORANGE, (self.x, self.y, self.width/2, self.width/2))
 
@@ -177,16 +177,19 @@ class Spot:
     def __lt__(self, other):
         return False
 
+
 def reconstruct_path(came_from, current, draw):
     while current in came_from:
         current = came_from[current]
         current.make_path()
         draw()
 
+
 def h(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
     return abs(x1 - x2) + abs(y1 - y2)
+
 
 def algorithm(draw, grid, start, end):
     count = 0
@@ -251,6 +254,7 @@ def algorithm(draw, grid, start, end):
                 draw()
     return False
 
+
 def buffer_algorithm(draw, grid, start, end):
     count = 0
 
@@ -314,6 +318,7 @@ def buffer_algorithm(draw, grid, start, end):
                 draw()
     return False
 
+
 def get_clicked_pos(pos, rows, width):
     gap = width // rows
     y, x = pos
@@ -321,6 +326,7 @@ def get_clicked_pos(pos, rows, width):
     row = y // gap
     col = x // gap
     return row, col
+
 
 def make_grid(rows, width):
     grid = []
@@ -333,6 +339,7 @@ def make_grid(rows, width):
             spot.make_barrier()
             grid[i].append(spot)
     return grid
+
 
 def make_ship(draw, grid, rows):
     # Find a random spot on the grid
@@ -412,7 +419,7 @@ def make_ship(draw, grid, rows):
         temp = red.pop()
         temp.make_color(BLACK)
 
-    # pygame.time.delay(1000)
+    pygame.time.delay(1000)
     draw()
 
     random_bot = random.choice(list(white))
@@ -427,6 +434,7 @@ def make_ship(draw, grid, rows):
     draw()
 
     return (random_bot, random_button, random_fire)
+
 
 def draw_grid_lines(win, rows, width):
     gap = width // rows
@@ -446,6 +454,7 @@ def draw(win, grid, rows, width):
     draw_grid_lines(win, rows, width)
     pygame.display.update()
 
+
 def main(win, width):
     ROWS = 10
     grid = make_grid(ROWS, width)
@@ -460,19 +469,18 @@ def main(win, width):
             spot.update_buffer_neighbors(grid)
             spot.update_unres_neighbors(grid)
     print(random_bot.buffer_neighbors)
-    
+
     time = False
     run = True
 
-    
-    #spot.update_unres_neighbors(grid)
+    # spot.update_unres_neighbors(grid)
     a = buffer_algorithm(lambda: draw(win, grid, ROWS, width),
-        grid, start, end)
+                         grid, start, end)
 
     if not a:
         print("NO BUFFER PATH")
         a = algorithm(lambda: draw(win, grid, ROWS, width),
-            grid, start, end)
+                      grid, start, end)
 
     while run:
 
@@ -524,50 +532,49 @@ def main(win, width):
                     elif spot == end:
                         end = None
 
-            if event.type == pygame.KEYDOWN: # Space
+            if event.type == pygame.KEYDOWN:  # Space
                 if event.key == pygame.K_SPACE and start and end:
                     time = True
-                            
 
                 if event.key == pygame.K_c:
                     start = None
                     end = None
                     grid = make_grid(ROWS, width)
-        if(time):
-            
+        if (time):
+
             for row in grid:
                 for spot in row:
-                    if(spot.is_path() or spot.is_open() or spot.is_closed()):
+                    if (spot.is_path() or spot.is_open() or spot.is_closed()):
                         spot.reset()
                     spot.update_neighbors(grid)
                     spot.update_buffer_neighbors(grid)
                     spot.update_unres_neighbors(grid)
-            
+
             a = buffer_algorithm(lambda: draw(win, grid, ROWS, width),
-                grid, start, end)
-            
+                                 grid, start, end)
+
             if not a:
                 print("NO BUFFER PATH")
                 a = algorithm(lambda: draw(win, grid, ROWS, width),
-                    grid, start, end)
+                              grid, start, end)
 
             if not (a):
                 time = False
                 print("NO PATHS AVAILABLE")
                 continue
-            
-            #pygame.time.delay(1000)
+
+            pygame.time.delay(1000)
             print("ONE TIME STEP PASSED")
             for nei in start.neighbors:
-                print(nei.get_pos() , nei.get_color(), nei.is_fire())
+                print(nei.get_pos(), nei.get_color(), nei.is_fire())
                 if nei.is_path() or nei.is_end():
                     print("YES")
                     nei.make_start()
                     start.reset()
                     start = nei
-            if(start == end):
+            if (start == end):
                 print("HOORAYYYY")
-                #pygame.time.delay(300)
+                pygame.time.delay(300)
                 time = False
                 continue
             firespots = set()
@@ -581,21 +588,20 @@ def main(win, width):
                         # if(K > 0):
                         #     print(K, "SKDUJFGHSD")
                         probability = 1 - ((1 - Q)**K)
-                        
-                        #print(probability)
+
+                        # print(probability)
                         if random.random() < probability:
                             firespots.add(spot)
-                            #print("added")
+                            # print("added")
                         else:
                             pass
             for spot in firespots:
                 spot.make_fire()
-            if(start.is_fire() or end.is_fire()):
+            if (start.is_fire() or end.is_fire()):
                 print("RIP BOZO")
                 pygame.time.delay(300)
                 time = False
                 continue
-
 
     pygame.quit()
 

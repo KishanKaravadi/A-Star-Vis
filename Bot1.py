@@ -139,10 +139,13 @@ class Spot:
 
 
 def reconstruct_path(came_from, current, draw):
+    hi = 0
     while current in came_from:
+        hi += 1
         current = came_from[current]
         current.make_path()
         draw()
+    return hi
 
 # Manhattan distance from point to end
 
@@ -163,6 +166,7 @@ def h_time(p1, p2, time):
 
 def algorithm(draw, grid, start, end, fire):
     count = 0
+    steps = 0
 
     # frontier
     open_set = PriorityQueue()
@@ -187,13 +191,14 @@ def algorithm(draw, grid, start, end, fire):
         open_set_hash.remove(current)
 
         if current == end:
-            reconstruct_path(came_from, end, draw)
+            hi = reconstruct_path(came_from, end, draw)
             start.make_start()
             end.make_end()
             for row in grid:
                 for spot in row:
                     if not (spot.is_end() or spot.is_start() or spot.is_barrier() or spot.is_path()):
                         spot.reset()
+            print(hi)
             return True
 
         for neighbor in current.neighbors:

@@ -829,11 +829,11 @@ def Bot2(win, width, grid, ROWS):
 
 
 def main(win, width):
-    ROWS = 100
+    ROWS = 20
     grid = make_grid(ROWS, width)
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    Bot1(win, width, grid, ROWS)
-    Bot2(win, width, grid, ROWS)
+    # Bot1(win, width, grid, ROWS)
+    # Bot2(win, width, grid, ROWS)
     Bot3(win, width, grid, ROWS)
 
 
