@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 import pygame
 import random
 from queue import PriorityQueue
@@ -366,7 +366,6 @@ def Bot1(win, width, ROWS, square):
         border = set()
         ans = False
         k = square//2
-        print(k)
         for i in range(-k-1, k+2):
             for j in range(-k-1, k+2):
                 if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
@@ -378,14 +377,40 @@ def Bot1(win, width, ROWS, square):
                             ans = True
         return ans, det_square, border
 
+    def create_dist_matrix(may_contain_leak):
+        dists = defaultdict(int)
+
+        for spot in may_contain_leak:
+            for row in grid:
+                for l in row:
+                    if (l.is_path() or l.is_open() or l.is_closed()):
+                        l.reset()
+                    l.update_neighbors(grid)
+                    l.update_unres_neighbors(grid)
+            for row in grid:
+                for l in row:
+                    if l.is_white() and dists[(spot, l)] != 0:
+                        _, dist = algorithm(lambda: draw(win, grid, ROWS, width),
+                                            grid, spot, l)
+                        dists[(spot, l)] = dist
+                        dists[(l, spot)] = dist
+        return dists
+
     assert square >= 3
     grid = make_grid(ROWS, width)
+
     may_contain_leak, random_bot, random_leak = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
+
+    dists = create_dist_matrix(may_contain_leak)
+    for key, value in dists:
+        print(type(key), type(value))
+
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
     end = random_leak
+
     for row in grid:
         for spot in row:
             spot.update_neighbors(grid)
@@ -393,10 +418,6 @@ def Bot1(win, width, ROWS, square):
     run = True
     time = True
     total_actions = 0
-
-    # spot.update_unres_neighbors(grid)
-    # a = algorithm(lambda: draw(win, grid, ROWS, width),
-    #               grid, start, end)
 
     while run:
         for row in grid:
@@ -411,49 +432,44 @@ def Bot1(win, width, ROWS, square):
         if time:
 
             # while (start.get_pos() != random_leak.get_pos()):
+
+            # Run Sense
             leak_present, det_square, border = check_square(
                 start, random_leak)
             total_actions += 1
+
+            # Update may contain leak set
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
             else:
                 may_contain_leak = det_square & may_contain_leak
 
+            # Find next spot to explore
             next_location = None
-            min_dist = 1000
-            x = border.pop()
-            # for spot in border:
-            spot = x
-            print(spot.get_pos())
-            for row in grid:
-                for l in row:
-                    if (l.is_path() or l.is_open() or l.is_closed()):
-                        l.reset()
-                    l.update_neighbors(grid)
-                    l.update_unres_neighbors(grid)
 
+            visited = set()
+            queue = deque()
+
+            visited.add(start)
+            queue.append(start)
+
+            while queue:
+                curr = queue.popleft()
+
+                if curr.is_white():
+                    next_location = curr
+                    break
+
+                for nei in start.neighbors:
+                    if nei in visited:
+                        visited.add(nei)
+                        queue.append(nei)
+
+            # Dist from start to next_location
             _, dist = algorithm(lambda: draw(win, grid, ROWS, width),
-                                grid, start, spot)
-            print(dist)
-            if dist <= min_dist:
-                min_dist = dist
-                next_location = spot
+                                grid, start, next_location)
 
-            pygame.time.delay(1000)
-            # for nei in start.neighbors:
-            #     print(nei.get_pos())
-            #     if nei.is_path() or nei.is_end():
-            #         print("YES")
-            #         nei.make_start()
-            #         start.reset()
-            #         start = nei
-            # if (start == end):
-            #     print("HOORAYYYY")
-            #     pygame.time.delay(300)
-            #     time = False
-            #     continue
-
-            total_actions += min_dist
+            total_actions += dist
             start = next_location
             time = False
 
@@ -465,7 +481,7 @@ def main(win, width):
     ROWS = 10
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
     actions = Bot1(win, width,  ROWS, 3)
-    print(actions)
+    # print(actions)
 
 
 main(WIN, WIDTH)
