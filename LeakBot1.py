@@ -359,6 +359,10 @@ def draw(win, grid, rows, width):
     pygame.display.update()
 
 
+def infinity():
+    return float('inf')
+
+
 def Bot1(win, width, ROWS, square):
     def check_square(spot, leak):
         x, y = spot.get_pos()
@@ -378,7 +382,7 @@ def Bot1(win, width, ROWS, square):
         return ans, det_square, border
 
     def create_dist_matrix(may_contain_leak):
-        dists = defaultdict(int)
+        dists = defaultdict(float('inf'))
 
         for spot in may_contain_leak:
             for row in grid:
@@ -402,9 +406,9 @@ def Bot1(win, width, ROWS, square):
     may_contain_leak, random_bot, random_leak = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
 
-    dists = create_dist_matrix(may_contain_leak)
-    for key, value in dists:
-        print(type(key), type(value))
+    # dists = create_dist_matrix(may_contain_leak)
+    # for key, value in dists:
+    #     print(type(key), type(value))
 
     may_contain_leak = may_contain_leak - {random_bot}
 
@@ -432,45 +436,57 @@ def Bot1(win, width, ROWS, square):
         if time:
 
             # while (start.get_pos() != random_leak.get_pos()):
+            for _ in range(1000):
 
-            # Run Sense
-            leak_present, det_square, border = check_square(
-                start, random_leak)
-            total_actions += 1
+                # Run Sense
+                leak_present, det_square, border = check_square(
+                    start, random_leak)
+                total_actions += 1
 
-            # Update may contain leak set
-            if (not leak_present):
-                may_contain_leak = may_contain_leak - det_square
-            else:
-                may_contain_leak = det_square & may_contain_leak
+                # Update may contain leak set
+                if (not leak_present):
+                    may_contain_leak = may_contain_leak - det_square
+                else:
+                    may_contain_leak = det_square & may_contain_leak
 
-            # Find next spot to explore
-            next_location = None
+                # Find next spot to explore
+                next_location = None
 
-            visited = set()
-            queue = deque()
+                queue = deque()
+                dists = defaultdict(infinity)
 
-            visited.add(start)
-            queue.append(start)
+                queue.append(start)
 
-            while queue:
-                curr = queue.popleft()
+                distance = 0
+                dists[start.get_pos()] = 0
+                while queue:
 
-                if curr.is_white():
-                    next_location = curr
-                    break
+                    curr = queue.popleft()
 
-                for nei in start.neighbors:
-                    if nei in visited:
-                        visited.add(nei)
-                        queue.append(nei)
+                    if curr.is_white() and curr not in det_square:
+                        print(dists[curr.get_pos()])
+                        print(dists)
+                        next_location = curr
+                        next_location.make_color(BROWN)
+                        break
 
-            # Dist from start to next_location
-            _, dist = algorithm(lambda: draw(win, grid, ROWS, width),
-                                grid, start, next_location)
+                    for nei in curr.neighbors:
+                        if dists[nei.get_pos()] == float('inf'):
+                            dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
-            total_actions += dist
-            start = next_location
+                            queue.append(nei)
+
+                pygame.time.delay(1000)
+
+                next_location.make_start()
+                start.reset()
+                total_actions += distance
+                start = next_location
+
+                for cell in det_square:
+                    cell.make_color(GREY)
+
+                draw(win, grid, ROWS, width)
             time = False
 
     pygame.quit()
