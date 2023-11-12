@@ -383,7 +383,7 @@ def Bot3(win, width, ROWS, square):
                             ans = True
         return ans, det_square, border
 
-    def create_dist_matrix(may_contain_leak):
+    #def create_dist_matrix(may_contain_leak):
         dists = defaultdict(float('inf'))
 
         for spot in may_contain_leak:
@@ -417,22 +417,24 @@ def Bot3(win, width, ROWS, square):
     start = random_bot
     end = random_leak
 
+    
     # key is a position
     # val is a probability (float)
-    probabilities = defaultdict(lambda: 1/len(may_contain_leak))
+    probabilities = defaultdict(lambda: round(1/len(may_contain_leak),12))
     for i in may_contain_leak:
-        probabilities[i.get_pos()] = 1/len(may_contain_leak)
-    probabilities[start.get_pos()] = 0
+        probabilities[i.get_pos()] = round(1/len(may_contain_leak),12)
+    #probabilities[start.get_pos()] = 0
 
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
-
+    
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
         for key in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
             denom = sum(probability_matrix[key2] for key2 in probability_matrix if key2 != key)
-            if denom != 0 and not math.isinf(denom):
+            #if denom != 0 and not math.isinf(denom):
+            if denom>1:
                 probability_matrix[key] = probability_matrix[key] / denom
         return probability_matrix
 
@@ -448,6 +450,7 @@ def Bot3(win, width, ROWS, square):
                 probability_matrix[key] = (
                     probability_matrix[key] * math.exp((-1 * ALPHA) * (dists[(bot_location, key)] - 1))
                 ) / denom
+                
         return probability_matrix
 
     def no_beep_probability_update(probability_matrix, bot_location):
@@ -459,6 +462,7 @@ def Bot3(win, width, ROWS, square):
                 if key2 != key
             )
             if denom != 0 and not math.isinf(denom):
+                
                 probability_matrix[key] = (
                     probability_matrix[key] * (1 - math.exp((-1 * ALPHA) * (dists[(bot_location, key)] - 1)))
                 ) / denom
@@ -513,6 +517,9 @@ def Bot3(win, width, ROWS, square):
                                 queue.append(nei)
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
+                print("VALUES: ", sum(probabilities.values()))
+                print(probabilities)
+                #break
                 beep = random.random() <= (
                     math.exp((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
                 print("beep: ", beep, math.exp((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1))), 
