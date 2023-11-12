@@ -171,7 +171,7 @@ def reconstruct_path(came_from, current, draw):
         hi += 1
         current = came_from[current]
         current.make_path()
-        # draw()
+        # draw()# Here
     return hi
 
 # Manhattan distance from point to end
@@ -489,7 +489,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
             for spot in row:
                 spot.update_neighbors(grid)
                 spot.update_unres_neighbors(grid)
-        # draw(win, grid, ROWS, width)
+        # draw(win, grid, ROWS, width)#Here
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
