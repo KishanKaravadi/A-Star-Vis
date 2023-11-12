@@ -20,6 +20,7 @@ ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
 BROWN = (79, 46, 13)
+ALPHA = 0.5
 
 
 class Spot:
@@ -364,7 +365,7 @@ def infinity():
     return float('inf')
 
 
-def Bot3(win, width, ROWS, square, ALPHA):
+def Bot3(win, width, ROWS, square):
     def check_square(spot, leak):
         x, y = spot.get_pos()
         det_square = set()
@@ -529,23 +530,22 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 # removed all leak_present code here as no detection square for bot 3
 
                 # Find next spot to explore
-                sense_again = all(not i.is_path() for i in start.neighbors)
-                if sense_again:
-                    total_actions += 1
-                    if beep:
-                        probabilities = beep_probability_update(
-                            probabilities, start.get_pos())
-                    else:
-                        probabilities = no_beep_probability_update(
-                            probabilities, start.get_pos())
-                    next_location = get_location_of_max_probability(
-                        probabilities)
-                    # print(probabilities)
 
-                    a, temp, came_from = algorithm(lambda: draw(win, grid, ROWS, width),
-                                                   grid, start, next_location)
-                    total_actions += temp
-                    # print(len(came_from))
+                total_actions += 1
+                if beep:
+                    probabilities = beep_probability_update(
+                        probabilities, start.get_pos())
+                else:
+                    probabilities = no_beep_probability_update(
+                        probabilities, start.get_pos())
+                next_location = get_location_of_max_probability(
+                    probabilities)
+                # print(probabilities)
+
+                a, temp, came_from = algorithm(lambda: draw(win, grid, ROWS, width),
+                                               grid, start, next_location)
+                total_actions += temp
+                # print(len(came_from))
 
                 # get path from bot location to the next location found
 
@@ -583,18 +583,10 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
 
 def main(win, width):
-    ROWS = 30
+    ROWS = 20
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-
-    success = defaultdict(int)
-    for i in range(1, 11):
-        for _ in range(1500):
-            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-    print(success)
+    actions = Bot3(win, width,  ROWS, 3)
+    print(actions)
 
 
 main(WIN, WIDTH)
