@@ -8,6 +8,8 @@ import random
 from queue import PriorityQueue
 import concurrent.futures
 import os
+import numpy as np
+import matplotlib.pyplot as plt
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
@@ -425,7 +427,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    #end = random_leak
+    # end = random_leak
 
     # key is a position
     # val is a probability (float)
@@ -437,7 +439,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
 
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-        
+
         for key in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
@@ -535,7 +537,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                 queue.append(nei)
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
-                
+
                 total_actions += 1
                 beep = random.random() <= (
                     E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
@@ -579,8 +581,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                         browncount = 0
                         for j in i.neighbors:
                             if j.is_path():
-                                browncount+=1
-                        if browncount==2:
+                                browncount += 1
+                        if browncount == 2:
                             return total_actions
 
                     if i.is_path() or i.get_pos() == next_location.get_pos():
@@ -609,54 +611,67 @@ def Bot3(win, width, ROWS, square, ALPHA):
     return total_actions
 
 
-def main(win, width):
-    ROWS = 20
-    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    success = defaultdict(int)
-    count_set = 0
-    # count = 0
-    for i in range(1, 2):
-        count_set += 1
-        print(count_set)
-        for _ in range(1):
-            # count += 1
-            # print(count)
-            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-    print(success)
+# def main(win, width):
+#     ROWS = 20
+#     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     success = defaultdict(int)
+#     count_set = 0
+#     # count = 0
+#     for i in range(1, 2):
+#         count_set += 1
+#         print(count_set)
+#         for _ in range(1):
+#             # count += 1
+#             # print(count)
+#             success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
+#     print(success)
 
 
 # Your existing main method
 
 
-# def run_bot3(alpha):
-#     ROWS = 30
-#     total_actions = 0
-#     for _ in range(20):
-#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
-#     return total_actions/20
+def run_bot3(alpha):
+    ROWS = 30
+    total_actions = 0
+    for _ in range(20):
+        total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
+    return total_actions/20
 
 
-# def main(WIN, WIDTH):
-#     success = defaultdict(int)
+def main(WIN, WIDTH):
+    success = defaultdict(int)
 
-#     with ProcessPoolExecutor(max_workers=7) as executor:
-#         alphas = [i / 10 for i in range(1, 11)]
+    with ProcessPoolExecutor(max_workers=7) as executor:
+        alphas = [i / 10 for i in range(1, 11)]
 
-#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
 
-#         for future in as_completed(futures):
-#             alpha = futures[future]
-#             try:
-#                 result = future.result()
-#                 success[alpha] += result
-#             except Exception as e:
-#                 print(f"Error in execution for alpha={alpha}: {e}")
+        for future in as_completed(futures):
+            alpha = futures[future]
+            try:
+                result = future.result()
+                success[alpha] += result
+            except Exception as e:
+                print(f"Error in execution for alpha={alpha}: {e}")
 
-#     print(success)
+    print(success)
+    alphas, total_actions = zip(*sorted(success.items()))
+
+    # Convert to NumPy arrays
+    alphas = np.array(alphas)
+    total_actions = np.array(total_actions)
+
+    # Create the plot
+    plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
+    plt.title('Alpha vs Total Actions')
+    plt.xlabel('Alpha')
+    plt.ylabel('Total Actions')
+    plt.grid(True)
+    plt.savefig('scatter_plot.png')
 
 
 if __name__ == "__main__":
