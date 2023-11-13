@@ -477,23 +477,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 queue = deque()
                 dists = defaultdict(infinity)
 
-                # for og_nei in may_contain_leak:
-                #     queue.append(og_nei)
-                #     dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
-                #     while queue:
-
-                #         curr = queue.popleft()
-
-                #         for nei in curr.neighbors:
-                #             if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
-                #                 continue
-                #             else:
-                #                 dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
-                #                     og_nei.get_pos(), curr.get_pos())]+1
-                #                 dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
-                #                     og_nei.get_pos(), nei.get_pos())]
-
-                #                 queue.append(nei)
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
 
