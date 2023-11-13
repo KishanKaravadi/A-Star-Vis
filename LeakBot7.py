@@ -342,10 +342,9 @@ def make_ship(draw, grid, rows, square):
     x, y = random_bot.get_pos()
 
     random_leak = random.choice(list(white))
-    #random_leak2 = random.choice(list(white - {random_leak}))
-    random_leak.make_end()
+    random_leak2 = random.choice(list(white))
 
-    return (white, random_bot, random_leak)
+    return (white, random_bot, random_leak, random_leak2)
 
 
 def draw_grid_lines(win, rows, width):
@@ -376,7 +375,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
     # assert square >= 3
     grid = make_grid(ROWS, width)
 
-    may_contain_leak, random_bot, random_leak = make_ship(
+    may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
 
     # dists = create_dist_matrix(may_contain_leak)
@@ -386,10 +385,11 @@ def Bot3(win, width, ROWS, square, ALPHA):
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    end = random_leak
+    #end = random_leak
 
     # key is a position
     # val is a probability (float)
+    
     probabilities = defaultdict(lambda: 1/len(may_contain_leak))
     for i in may_contain_leak:
         probabilities[i.get_pos()] = 1/len(may_contain_leak)
@@ -398,7 +398,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
 
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-       
         for key in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
@@ -471,7 +470,23 @@ def Bot3(win, width, ROWS, square, ALPHA):
             next_location = None
             print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
-            while (start.get_pos() != random_leak.get_pos()):
+            counter = 0
+            
+            make_brown = True
+            make_brown2 = True
+            while (counter<2):
+                if make_brown:
+                    random_leak.make_color(BROWN)
+                if make_brown2:
+                    random_leak2.make_color(BROWN)
+                if start.get_pos() == random_leak.get_pos():
+                    random_leak.make_color(WHITE)
+                    may_contain_leak = may_contain_leak - {random_leak}
+                    counter+=1
+                if start.get_pos() == random_leak2.get_pos():
+                    random_leak2.make_color(WHITE)
+                    may_contain_leak = may_contain_leak - {random_leak2}
+                    counter+=1
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
                 queue = deque()
@@ -524,8 +539,11 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
                                     queue.append(nei)
                     total_actions += 1
-                    beep = random.random() <= (
+                    beep_a = random.random() <= (
                         E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
+                    beep_b = random.random() <= (
+                        E**((-1*ALPHA)*(dists[start.get_pos(), random_leak2.get_pos()] - 1)))
+                    beep = beep_a or beep_b
                     if beep:
                         probabilities = beep_probability_update(
                             probabilities, start.get_pos())
@@ -543,18 +561,35 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
                 # get path from bot location to the next location found
 
-                random_leak.make_color(BROWN)
-
                 # while i!= next_location:
                 # i = came_to[start]
-
+                
                 # print(i.get_pos(), start.get_pos())
 
                 for i in start.neighbors:
                     # bot 4
-                    # if i.get_pos() == random_leak.get_pos():
-                    #     return total_actions
-                    # else:
+                    if i.get_pos() == random_leak.get_pos():
+                        browncount = 0
+                        for j in i.neighbors:
+                            if j.is_path() or j.get_pos() == start.get_pos() or j.get_color()==GREEN:
+                                browncount+=1
+                                print("REACHED")
+                            if browncount==2:
+                                i.make_color(WHITE)
+                                make_brown = False
+
+                                
+                    if i.get_pos() == random_leak2.get_pos():
+                        browncount = 0
+                        for j in i.neighbors:
+                            if j.is_path() or j.get_pos() == start.get_pos() or j.get_color()==GREEN:
+                                browncount+=1
+                            if browncount==2:
+                                i.make_color(WHITE)
+                                make_brown2 = False
+                                
+                    
+
                     if i.is_path() or i.get_pos() == next_location.get_pos():
                         # print(i.get_pos())
                         # print(i.get_pos(),probabilities)
@@ -565,7 +600,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                         start.reset()
                         start = i
                         # print(start.get_pos())
-                        if start.get_pos() == random_leak.get_pos():
+                        if counter==2:
                             return total_actions
                         else:
                             probabilities = bot_enters_cell_probability_update(
@@ -591,7 +626,7 @@ def main(win, width):
     success = defaultdict(int)
     count_set = 0
     # count = 0
-    for i in range(1, 11):
+    for i in range(1, 2):
         count_set += 1
         print(count_set)
         for _ in range(1):

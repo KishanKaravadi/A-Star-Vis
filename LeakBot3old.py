@@ -340,9 +340,13 @@ def make_ship(draw, grid, rows, square):
     random_bot = random.choice(list(white))
     random_bot.make_start()
     x, y = random_bot.get_pos()
+    detection_square_spots = set()
+    for i in range((-square//2), (square//2)+1):
+        for j in range((-square//2), (square//2)+1):
+            if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
+                detection_square_spots.add(grid[x+i][y+j])
 
-    random_leak = random.choice(list(white))
-    #random_leak2 = random.choice(list(white - {random_leak}))
+    random_leak = random.choice(list(white - detection_square_spots))
     random_leak.make_end()
 
     return (white, random_bot, random_leak)
@@ -372,7 +376,42 @@ def infinity():
 
 
 def Bot3(win, width, ROWS, square, ALPHA):
-    
+    def check_square(spot, leak):
+        x, y = spot.get_pos()
+        det_square = set()
+        border = set()
+        ans = False
+        k = square//2
+        for i in range(-k-1, k+2):
+            for j in range(-k-1, k+2):
+                if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
+                    if i == -k-1 or i == k+1 or j == -k-1 or j == k+1:
+                        border.add(grid[x+i][y+j])
+                    else:
+                        det_square.add(grid[x+i][y+j])
+                        if grid[x+i][y+j] == leak:
+                            ans = True
+        return ans, det_square, border
+
+    def create_dist_matrix(may_contain_leak):
+        dists = defaultdict(float('inf'))
+
+        for spot in may_contain_leak:
+            for row in grid:
+                for l in row:
+                    if (l.is_path() or l.is_open() or l.is_closed()):
+                        l.reset()
+                    l.update_neighbors(grid)
+                    l.update_unres_neighbors(grid)
+            for row in grid:
+                for l in row:
+                    if l.is_white() and dists[(spot, l)] != 0:
+                        _, dist, came_from, came_to = algorithm(lambda: draw(win, grid, ROWS, width),
+                                                                grid, spot, l)
+                        dists[(spot, l)] = dist
+                        dists[(l, spot)] = dist
+        return dists
+
     # assert square >= 3
     grid = make_grid(ROWS, width)
 
@@ -398,14 +437,14 @@ def Bot3(win, width, ROWS, square, ALPHA):
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
 
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-       
+        probability_matrix[bot_location] = 0
         for key in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
-            denom = 1 - probability_matrix[bot_location]
+            denom = sum(
+                probability_matrix[key2] for key2 in probability_matrix if key2 != bot_location)
             # if denom != 0 and not math.isinf(denom):
             probability_matrix[key] = probability_matrix[key] / denom
-        probability_matrix[bot_location] = 0
         return probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
@@ -581,55 +620,56 @@ def Bot3(win, width, ROWS, square, ALPHA):
     return total_actions
 
 
-def main(win, width):
-    ROWS = 20
-    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    success = defaultdict(int)
-    count_set = 0
-    # count = 0
-    for i in range(1, 11):
-        count_set += 1
-        print(count_set)
-        for _ in range(1):
-            # count += 1
-            # print(count)
-            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-    print(success)
+# def main(win, width):
+#     ROWS = 30
+#     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     success = defaultdict(int)
+#     count_set = 0
+#     # count = 0
+#     for i in range(1, 11):
+#         count_set += 1
+#         print(count_set)
+#         for _ in range(150):
+#             # count += 1
+#             # print(count)
+#             success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
+#     print(success)
 
 
 # Your existing main method
 
 
-# def run_bot3(alpha):
-#     ROWS = 30
-#     total_actions = 0
-#     for _ in range(20):
-#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
-#     return total_actions/20
+def run_bot3(alpha):
+    ROWS = 30
+    total_actions = 0
+    for _ in range(20):
+        total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
+    return total_actions/20
 
 
-# def main(WIN, WIDTH):
-#     success = defaultdict(int)
+def main(WIN, WIDTH):
+    success = defaultdict(int)
 
-#     with ProcessPoolExecutor(max_workers=7) as executor:
-#         alphas = [i / 10 for i in range(1, 11)]
+    with ProcessPoolExecutor(max_workers=7) as executor:
+        alphas = [i / 10 for i in range(1, 11)]
 
-#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
 
-#         for future in as_completed(futures):
-#             alpha = futures[future]
-#             try:
-#                 result = future.result()
-#                 success[alpha] += result
-#             except Exception as e:
-#                 print(f"Error in execution for alpha={alpha}: {e}")
+        for future in as_completed(futures):
+            alpha = futures[future]
+            try:
+                result = future.result()
+                success[alpha] += result
+            except Exception as e:
+                print(f"Error in execution for alpha={alpha}: {e}")
 
-#     print(success)
+    print(success)
 
 
 if __name__ == "__main__":
     main(WIN, WIDTH)
+# main(WIN, WIDTH)

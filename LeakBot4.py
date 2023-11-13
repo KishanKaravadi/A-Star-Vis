@@ -340,13 +340,13 @@ def make_ship(draw, grid, rows, square):
     random_bot = random.choice(list(white))
     random_bot.make_start()
     x, y = random_bot.get_pos()
-    detection_square_spots = set()
-    for i in range((-square//2), (square//2)+1):
-        for j in range((-square//2), (square//2)+1):
-            if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
-                detection_square_spots.add(grid[x+i][y+j])
+    # detection_square_spots = set()
+    # for i in range((-square//2), (square//2)+1):
+    #     for j in range((-square//2), (square//2)+1):
+    #         if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
+    #             detection_square_spots.add(grid[x+i][y+j])
 
-    random_leak = random.choice(list(white - detection_square_spots))
+    random_leak = random.choice(list(white))
     random_leak.make_end()
 
     return (white, random_bot, random_leak)
@@ -425,7 +425,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    end = random_leak
+    #end = random_leak
 
     # key is a position
     # val is a probability (float)
@@ -437,14 +437,14 @@ def Bot3(win, width, ROWS, square, ALPHA):
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
 
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-        probability_matrix[bot_location] = 0
+        
         for key in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
-            denom = sum(
-                probability_matrix[key2] for key2 in probability_matrix if key2 != bot_location)
+            denom = 1 - probability_matrix[bot_location]
             # if denom != 0 and not math.isinf(denom):
             probability_matrix[key] = probability_matrix[key] / denom
+        probability_matrix[bot_location] = 0
         return probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
@@ -592,26 +592,31 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 for i in start.neighbors:
                     # bot 4
                     if i.get_pos() == random_leak.get_pos():
-                        return total_actions
-                    else:
-                        if i.is_path() or i.get_pos() == next_location.get_pos():
-                            # print(i.get_pos())
-                            # print(i.get_pos(),probabilities)
-                            # pygame.time.delay(100)
+                        browncount = 0
+                        for j in i.neighbors:
+                            if j.is_path():
+                                browncount+=1
+                        if browncount==2:
+                            return total_actions
 
-                            i.make_start()
-                            # may_contain_leak = may_contain_leak - {i}
-                            start.reset()
-                            start = i
-                            # print(start.get_pos())
-                            if start.get_pos() == random_leak.get_pos():
-                                return total_actions
-                            else:
-                                probabilities = bot_enters_cell_probability_update(
-                                    probabilities, start.get_pos())
-                                # print("reached")
-                                probabilities[start.get_pos()] = 0
-                                total_actions += 1
+                    if i.is_path() or i.get_pos() == next_location.get_pos():
+                        # print(i.get_pos())
+                        # print(i.get_pos(),probabilities)
+                        # pygame.time.delay(100)
+
+                        i.make_start()
+                        # may_contain_leak = may_contain_leak - {i}
+                        start.reset()
+                        start = i
+                        # print(start.get_pos())
+                        if start.get_pos() == random_leak.get_pos():
+                            return total_actions
+                        else:
+                            probabilities = bot_enters_cell_probability_update(
+                                probabilities, start.get_pos())
+                            # print("reached")
+                            probabilities[start.get_pos()] = 0
+                            total_actions += 1
                 # pygame.time.delay(1000)
                 draw(win, grid, ROWS, width)
             time = False
@@ -620,54 +625,54 @@ def Bot3(win, width, ROWS, square, ALPHA):
     return total_actions
 
 
-# def main(win, width):
-#     ROWS = 30
-#     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
-#     # print(actions)
-#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
-#     # print(actions)
-#     success = defaultdict(int)
-#     count_set = 0
-#     # count = 0
-#     for i in range(1, 11):
-#         count_set += 1
-#         print(count_set)
-#         for _ in range(150):
-#             # count += 1
-#             # print(count)
-#             success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-#     print(success)
+def main(win, width):
+    ROWS = 20
+    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
+    # actions = Bot3(win, width,  ROWS, 3, 0.5)
+    # print(actions)
+    # actions = Bot3(win, width,  ROWS, 3, 0.5)
+    # print(actions)
+    success = defaultdict(int)
+    count_set = 0
+    # count = 0
+    for i in range(1, 2):
+        count_set += 1
+        print(count_set)
+        for _ in range(1):
+            # count += 1
+            # print(count)
+            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
+    print(success)
 
 
 # Your existing main method
 
 
-def run_bot3(alpha):
-    ROWS = 30
-    total_actions = 0
-    for _ in range(20):
-        total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
-    return total_actions/20
+# def run_bot3(alpha):
+#     ROWS = 30
+#     total_actions = 0
+#     for _ in range(20):
+#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
+#     return total_actions/20
 
 
-def main(WIN, WIDTH):
-    success = defaultdict(int)
+# def main(WIN, WIDTH):
+#     success = defaultdict(int)
 
-    with ProcessPoolExecutor(max_workers=7) as executor:
-        alphas = [i / 10 for i in range(1, 11)]
+#     with ProcessPoolExecutor(max_workers=7) as executor:
+#         alphas = [i / 10 for i in range(1, 11)]
 
-        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
 
-        for future in as_completed(futures):
-            alpha = futures[future]
-            try:
-                result = future.result()
-                success[alpha] += result
-            except Exception as e:
-                print(f"Error in execution for alpha={alpha}: {e}")
+#         for future in as_completed(futures):
+#             alpha = futures[future]
+#             try:
+#                 result = future.result()
+#                 success[alpha] += result
+#             except Exception as e:
+#                 print(f"Error in execution for alpha={alpha}: {e}")
 
-    print(success)
+#     print(success)
 
 
 if __name__ == "__main__":
