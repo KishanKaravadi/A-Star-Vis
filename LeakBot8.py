@@ -539,9 +539,15 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                     queue.append(nei)
                     print("reached")
                     total_actions += 1
+                    W1 = 1
+                    W2 = 1
                     
-                    beep = (1 - ((1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) * 
-                      (1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak2.get_pos())] - 1)))))
+                    if total_actions > 50:
+                        W1 = total_actions - 50
+                        W2 = 1/W1
+
+                    beep = (1 - W1*((1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) * 
+                      W2*(1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak2.get_pos())] - 1)))))
                     if beep:
                         print("BEEPING")
                         probabilities = beep_probability_update(
