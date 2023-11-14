@@ -405,6 +405,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
             # key 2 is position of every other cell j', used for summation stored in denom
             denom = 1 - probability_matrix[bot_location]
             # if denom != 0 and not math.isinf(denom):
+            assert denom <= 1
             probability_matrix[key] = probability_matrix[key] / denom
         probability_matrix[bot_location] = 0
         return probability_matrix
@@ -560,7 +561,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                             probabilities = bot_enters_cell_probability_update(
                                 probabilities, start.get_pos())
                             # print("reached")
-                            probabilities[start.get_pos()] = 0
+                            #probabilities[start.get_pos()] = 0
                             total_actions += 1
                 # pygame.time.delay(1000)
                 draw(win, grid, ROWS, width)

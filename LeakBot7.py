@@ -473,8 +473,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
             next_location = None
             print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
-            
-            while (True):
+            counter = 0
+            while (counter < 2):
                 # for _ in range(100):
                 print(sum(probabilities.values()))
                 queue = deque()
@@ -507,12 +507,12 @@ def Bot3(win, width, ROWS, square, ALPHA):
                         beep_a = random.random() <= (
                             E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
                         if beep_a:
-                            print("beep_a")
+                            print("beep_a", start.get_pos(), random_leak.get_pos(),random_leak2.get_pos())
                     if make_brown2:
                         beep_b = random.random() <= (
                         E**((-1*ALPHA)*(dists[start.get_pos(), random_leak2.get_pos()] - 1)))
                         if beep_b:
-                            print("beep_b")
+                            print("beep_b", start.get_pos(), random_leak.get_pos(),random_leak2.get_pos())
                     beep = beep_a or beep_b
                     if beep:
                         probabilities = beep_probability_update(
@@ -541,58 +541,70 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 # print(i.get_pos(), start.get_pos())
 
                 for i in start.neighbors:
-                    if make_brown and i.get_pos() == random_leak.get_pos():
+                    if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
                         browncount = 0
                         for j in i.neighbors:
                             if j.is_path() or j.get_pos()==start.get_pos() or j.get_pos()==next_location.get_pos():
                                 browncount += 1
                         if browncount == 2:
-                            probabilities[random_leak.get_pos()] = 0 
-                            may_contain_leak = may_contain_leak - {random_leak}
-                            for k in may_contain_leak:
-                                probabilities[k.get_pos()] = 1/len(may_contain_leak)
-                            make_brown = False
-                            
-                            print("Leak 1")
-                            if make_brown2 == False:
-                                return total_actions
-                            #return total_actions
-                    if make_brown2 and i.get_pos() == random_leak2.get_pos():
-                        browncount = 0
-                        for j in i.neighbors:
-                            if j.is_path() or j.get_pos()==start.get_pos() or j.get_pos()==next_location.get_pos():
-                                browncount += 1
-                        if browncount == 2:
-                            probabilities[random_leak2.get_pos()] = 0 
-                            may_contain_leak = may_contain_leak - {random_leak2}
-                            for k in may_contain_leak:
-                                probabilities[k.get_pos()] = 1/len(may_contain_leak)
-                            make_brown2 = False
-                            print("Leak 2")
-                            if make_brown == False:
-                                return total_actions
-                            #return total_actions
-                    if i.is_path() or i.get_pos() == next_location.get_pos():
-                        #MAKE NEXT LOCATION BROWN CASE CODE HERE!!!!!
-                        if i.get_pos() == next_location.get_pos():
-                            if make_brown and i.get_pos() == random_leak.get_pos():
+                            if i.get_pos() == random_leak.get_pos():
                                 probabilities[random_leak.get_pos()] = 0 
                                 may_contain_leak = may_contain_leak - {random_leak}
                                 for k in may_contain_leak:
                                     probabilities[k.get_pos()] = 1/len(may_contain_leak)
+                                random_leak = random_leak2
                                 make_brown = False
+                                beep_a = False
+                            
                                 print("Leak 1")
-                                if make_brown2 == False:
+                                counter+=1
+                                if counter ==2:
                                     return total_actions
-                                    
-                            if make_brown2 and i.get_pos() == random_leak2.get_pos():
+                            elif i.get_pos() == random_leak2.get_pos():
                                 probabilities[random_leak2.get_pos()] = 0 
                                 may_contain_leak = may_contain_leak - {random_leak2}
                                 for k in may_contain_leak:
                                     probabilities[k.get_pos()] = 1/len(may_contain_leak)
+                                random_leak2 = random_leak
                                 make_brown2 = False
+                                beep_b = False
+                            
                                 print("Leak 2")
-                                if make_brown == False:
+                                counter+=1
+                                if counter ==2:
+                                    return total_actions
+                            #return total_actions
+                    
+                            #return total_actions
+                    if i.is_path() or i.get_pos() == next_location.get_pos():
+                        #MAKE NEXT LOCATION BROWN CASE CODE HERE!!!!!
+                        if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
+                        
+                            if i.get_pos() == random_leak.get_pos():
+                                probabilities[random_leak.get_pos()] = 0 
+                                may_contain_leak = may_contain_leak - {random_leak}
+                                for k in may_contain_leak:
+                                    probabilities[k.get_pos()] = 1/len(may_contain_leak)
+                                random_leak = random_leak2
+                                make_brown = False
+                                beep_a = False
+                            
+                                print("Leak 1")
+                                counter+=1
+                                if counter ==2:
+                                    return total_actions
+                            elif i.get_pos() == random_leak2.get_pos():
+                                probabilities[random_leak2.get_pos()] = 0 
+                                may_contain_leak = may_contain_leak - {random_leak2}
+                                for k in may_contain_leak:
+                                    probabilities[k.get_pos()] = 1/len(may_contain_leak)
+                                random_leak2 = random_leak
+                                make_brown2 = False
+                                beep_b = False
+                            
+                                print("Leak 2")
+                                counter+=1
+                                if counter ==2:
                                     return total_actions
                         i.make_start()
                         # may_contain_leak = may_contain_leak - {i}
@@ -614,7 +626,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
 
 def main(win, width):
-    ROWS = 20
+    ROWS = 30
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
     # actions = Bot3(win, width,  ROWS, 3, 0.5)
     # print(actions)
