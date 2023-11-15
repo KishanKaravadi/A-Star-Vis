@@ -9,6 +9,9 @@ from queue import PriorityQueue
 import concurrent.futures
 import numpy as np
 import matplotlib.pyplot as plt
+import traceback
+from multiprocessing import Pool
+import gc
 
 
 E = 2.718281828459045
@@ -406,7 +409,7 @@ def Bot3(width, ROWS, square, ALPHA):
             # key 2 is position of every other cell j', used for summation stored in denom
             denom = 1 - probability_matrix[bot_location]
             # if denom != 0 and not math.isinf(denom):
-            assert denom <= 1
+            #assert denom <= 1
             probability_matrix[key] = probability_matrix[key] / denom
         probability_matrix[bot_location] = 0
         return probability_matrix
@@ -573,6 +576,7 @@ def Bot3(width, ROWS, square, ALPHA):
                 # pygame.time.delay(1000)
                 # draw(win, grid, ROWS, width)
             time = False
+            run = False
 
     # pygame.quit()
     return total_actions
@@ -608,23 +612,28 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for _ in range(150):
+    for i in range(1500):
         try:
             total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
-            print(f"Error in execution for alpha={alpha}: {e}")
+            print(f"Error in execution for alpha={alpha}: {e}", flush = True)
+            traceback.print_exc()
+            print("SKLDJFHLSDFH", flush = True)
+            return 0
             count -= 1
         count += 1
         print(count, flush=True)
     # pygame.quit()
+    print("FINISHED", alpha, flush = True)
+    gc.collect()
     return total_actions/(count)
 
 
 def main():
     success = defaultdict(int)
-
-    with ProcessPoolExecutor(max_workers=5) as executor:
-        alphas = [i / 1000 for i in range(1, 101)]
+    alphas = [i / 1000 for i in range(1, 101)]
+    with ProcessPoolExecutor(max_workers=10) as executor:
+        
 
         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
         count = 0
@@ -635,10 +644,19 @@ def main():
             count += 1
             print(count, alpha)
 
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
+    #     for alpha, result in zip(alphas, executor.map(run_bot3, alphas)):
+    #         print('%f result is: %d' % (alpha, result), flush = True)
+
+    # with Pool(10) as p:
+    #     k = zip(alphas, p.map(run_bot3, alphas))
+
     print(success)
+    #alphas, total_actions = zip(*list(k))
+
     alphas, total_actions = zip(*sorted(success.items()))
 
-    # Convert to NumPy arrays
+    #Convert to NumPy arrays
     alphas = np.array(alphas)
     total_actions = np.array(total_actions)
 
