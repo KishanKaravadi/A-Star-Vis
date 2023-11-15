@@ -513,40 +513,46 @@ def Bot3(win, width, ROWS, square, ALPHA):
         make_brown = True
         make_brown2 = True
 
+
+
         if time:
             next_location = None
             print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
             counter = 0
+
+            queue = deque()
+            dists = defaultdict(infinity)
+
+            for og_nei in may_contain_leak:
+                queue.append(og_nei)
+                dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
+                while queue:
+                    curr = queue.popleft()
+
+                    for nei in curr.neighbors:
+                        if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
+                            continue
+                        else:
+                            dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
+                                og_nei.get_pos(), curr.get_pos())]+1
+                            dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
+                                og_nei.get_pos(), nei.get_pos())]
+
+                            queue.append(nei)
+
             while (counter < 2):
                 # for _ in range(100):
                 print(sum(probabilities.values()))
-                queue = deque()
-                dists = defaultdict(infinity)
+                
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
 
                 # if not next_location or start.get_pos() == next_location.get_pos():
                 if sense_again:
-
-                    for og_nei in may_contain_leak:
-                        queue.append(og_nei)
-                        dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
-                        while queue:
-                            curr = queue.popleft()
-
-                            for nei in curr.neighbors:
-                                if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
-                                    continue
-                                else:
-                                    dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
-                                        og_nei.get_pos(), curr.get_pos())]+1
-                                    dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
-                                        og_nei.get_pos(), nei.get_pos())]
-
-                                    queue.append(nei)
-                    print("reached")
+                    
+                    #print("reached")
                     total_actions += 1
 
                     beep = (1 - ((1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) *

@@ -469,7 +469,6 @@ def Bot1(win, width, ROWS, square):
                     #print(dists[curr.get_pos()])
                     #print(dists)
                     next_location = curr
-                    may_contain_leak.remove(curr)
                     next_location.make_color(BROWN)
                     draw(win, grid, ROWS, width)
                     #draw()
@@ -485,7 +484,6 @@ def Bot1(win, width, ROWS, square):
             distance = dists[next_location.get_pos()]
             #print(distance)
             next_location.make_start()
-            #may_contain_leak.remove(start)
             start.reset()
             total_actions += distance
             start = next_location
