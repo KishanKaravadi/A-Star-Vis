@@ -630,21 +630,21 @@ def main():
     with ProcessPoolExecutor(max_workers=10) as executor:
         alphas = [i / 1000 for i in range(1, 101)]
 
-        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
-        count = 0
-        for future in as_completed(futures):
-            alpha = futures[future]
-            result = future.result()
-            success[alpha] += result
-            count += 1
-            print(count, alpha)
+#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+#         count = 0
+#         for future in as_completed(futures):
+#             alpha = futures[future]
+#             result = future.result()
+#             success[alpha] += result
+#             count += 1
+#             print(count, alpha)
 
-    print(success)
-    alphas, total_actions = zip(*sorted(success.items()))
+#     print(success)
+#     alphas, total_actions = zip(*sorted(success.items()))
 
-    # Convert to NumPy arrays
-    alphas = np.array(alphas)
-    total_actions = np.array(total_actions)
+#     # Convert to NumPy arrays
+#     alphas = np.array(alphas)
+#     total_actions = np.array(total_actions)
 
     # Create the plot
     plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
