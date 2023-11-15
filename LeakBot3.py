@@ -3,7 +3,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import concurrent.futures
 from collections import defaultdict, deque
 import math
-import pygame
+# import pygame
 import random
 from queue import PriorityQueue
 import concurrent.futures
@@ -11,10 +11,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
 E = 2.718281828459045
 FPS = 60
-clock = pygame.time.Clock()
+# clock = pygame.time.Clock()
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -218,9 +217,9 @@ def algorithm(draw, grid, start, end):
     open_set_hash = {start}
 
     while not open_set.empty():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
 
         current = open_set.get()[2]
         open_set_hash.remove(current)
@@ -377,7 +376,7 @@ def infinity():
     return float('inf')
 
 
-def Bot3(win, width, ROWS, square, ALPHA):
+def Bot3(width, ROWS, square, ALPHA):
     # assert square >= 3
     grid = make_grid(ROWS, width)
 
@@ -387,8 +386,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
     # dists = create_dist_matrix(may_contain_leak)
     # for key, value in dists:
     #     print(type(key), type(value))
-
-
 
     start = random_bot
     end = random_leak
@@ -485,15 +482,14 @@ def Bot3(win, width, ROWS, square, ALPHA):
                     queue.append(nei)
 
     while run:
-        clock.tick(FPS)
         for row in grid:
             for spot in row:
                 spot.update_neighbors(grid)
                 spot.update_unres_neighbors(grid)
         # draw(win, grid, ROWS, width)#Here
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         run = False
 
         if time:
             next_location = None
@@ -503,7 +499,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
                 probabilities = bot_enters_cell_probability_update(
-                                probabilities, start.get_pos())
+                    probabilities, start.get_pos())
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
 
@@ -575,10 +571,10 @@ def Bot3(win, width, ROWS, square, ALPHA):
                             # probabilities[start.get_pos()] = 0
                             total_actions += 1
                 # pygame.time.delay(1000)
-                draw(win, grid, ROWS, width)
+                # draw(win, grid, ROWS, width)
             time = False
 
-    #pygame.quit()
+    # pygame.quit()
     return total_actions
 
 
@@ -607,44 +603,44 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
 def run_bot3(alpha):
     WIDTH = 800
-    WIN = pygame.display.set_mode((WIDTH, WIDTH))
-    pygame.display.set_caption("Leak Finding Algorithm")
+    # WIN = pygame.display.set_mode((WIDTH, WIDTH))
+    # pygame.display.set_caption("Leak Finding Algorithm")
     ROWS = 30
     total_actions = 0
     count = 0
     for _ in range(150):
         try:
-            total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
+            total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
             print(f"Error in execution for alpha={alpha}: {e}")
             count -= 1
         count += 1
         print(count, flush=True)
-    pygame.quit()
+    # pygame.quit()
     return total_actions/(count)
 
 
 def main():
     success = defaultdict(int)
 
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    with ProcessPoolExecutor(max_workers=5) as executor:
         alphas = [i / 1000 for i in range(1, 101)]
 
-#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
-#         count = 0
-#         for future in as_completed(futures):
-#             alpha = futures[future]
-#             result = future.result()
-#             success[alpha] += result
-#             count += 1
-#             print(count, alpha)
+        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+        count = 0
+        for future in as_completed(futures):
+            alpha = futures[future]
+            result = future.result()
+            success[alpha] += result
+            count += 1
+            print(count, alpha)
 
-#     print(success)
-#     alphas, total_actions = zip(*sorted(success.items()))
+    print(success)
+    alphas, total_actions = zip(*sorted(success.items()))
 
-#     # Convert to NumPy arrays
-#     alphas = np.array(alphas)
-#     total_actions = np.array(total_actions)
+    # Convert to NumPy arrays
+    alphas = np.array(alphas)
+    total_actions = np.array(total_actions)
 
     # Create the plot
     plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
