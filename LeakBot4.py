@@ -424,8 +424,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
     # for key, value in dists:
     #     print(type(key), type(value))
 
-    may_contain_leak = may_contain_leak - {random_bot}
-
     start = random_bot
     # end = random_leak
 
@@ -536,7 +534,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
                 
-
+                probabilities = bot_enters_cell_probability_update(
+                                probabilities, start.get_pos())
                 
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
