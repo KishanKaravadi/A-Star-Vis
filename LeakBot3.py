@@ -608,7 +608,7 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for _ in range(150):
+    for _ in range(10):
         try:
             total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
