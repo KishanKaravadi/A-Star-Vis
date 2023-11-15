@@ -433,61 +433,71 @@ def Bot1(win, width, ROWS, square):
             if event.type == pygame.QUIT:
                 run = False
 
-        if time:
+        #if time:
 
-            # while (start.get_pos() != random_leak.get_pos()):
-            for _ in range(1000):
+        while (start.get_pos() != random_leak.get_pos()):
 
-                # Run Sense
-                leak_present, det_square, border = check_square(
-                    start, random_leak)
-                total_actions += 1
 
-                # Update may contain leak set
-                if (not leak_present):
-                    may_contain_leak = may_contain_leak - det_square
-                else:
-                    may_contain_leak = det_square & may_contain_leak
+            # Run Sense
+            leak_present, det_square, border = check_square(
+                start, random_leak)
+            #print(leak_present, " LEAK STATUS")
+            total_actions += 1
 
-                # Find next spot to explore
-                next_location = None
+            # Update may contain leak set
+            if (not leak_present):
+                may_contain_leak = may_contain_leak - det_square
+            else:
+                may_contain_leak = (det_square & may_contain_leak)
+                #print("HAHAHAHAHHAHAHAHAHAHHAHAHAHAHAHA", may_contain_leak)
 
-                queue = deque()
-                dists = defaultdict(infinity)
+            # Find next spot to explore
+            next_location = None
 
-                queue.append(start)
+            queue = deque()
+            dists = defaultdict(infinity)
 
-                distance = 0
-                dists[start.get_pos()] = 0
-                while queue:
+            queue.append(start)
 
-                    curr = queue.popleft()
+            distance = 0
+            dists[start.get_pos()] = 0
+            while queue:
 
-                    if curr.is_white() and curr not in det_square:
-                        print(dists[curr.get_pos()])
-                        print(dists)
-                        next_location = curr
-                        next_location.make_color(BROWN)
-                        break
+                curr = queue.popleft()
 
-                    for nei in curr.neighbors:
-                        if dists[nei.get_pos()] == float('inf'):
-                            dists[nei.get_pos()] = dists[curr.get_pos()]+1
+                if (curr.is_white() or curr.is_end()) and curr in may_contain_leak:
+                    #print(dists[curr.get_pos()])
+                    #print(dists)
+                    next_location = curr
+                    next_location.make_color(BROWN)
+                    draw(win, grid, ROWS, width)
+                    #draw()
+                    break
+                
+                for nei in curr.neighbors:
+                    if dists[nei.get_pos()] == float('inf'):
+                        dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
-                            queue.append(nei)
+                        queue.append(nei)
 
-                pygame.time.delay(1000)
+            pygame.time.delay(1000)
+            distance = dists[next_location.get_pos()]
+            #print(distance)
+            next_location.make_start()
+            start.reset()
+            total_actions += distance
+            start = next_location
+            if(start == random_leak):
+                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                time = False
+                run = False
 
-                next_location.make_start()
-                start.reset()
-                total_actions += distance
-                start = next_location
 
-                for cell in det_square:
-                    cell.make_color(GREY)
+            #for cell in det_square:
+                #cell.make_color(GREY)
 
-                draw(win, grid, ROWS, width)
-            time = False
+            draw(win, grid, ROWS, width)
+            #time = False
 
     pygame.quit()
     return total_actions
@@ -497,7 +507,7 @@ def main(win, width):
     ROWS = 10
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
     actions = Bot1(win, width,  ROWS, 3)
-    # print(actions)
+    print(actions)
 
 
 main(WIN, WIDTH)
