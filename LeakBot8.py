@@ -693,7 +693,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
                         total_actions += 1
                 # pygame.time.delay(1000)
                 draw(win, grid, ROWS, width)
-            time = False
 
     pygame.quit()
     return total_actions
