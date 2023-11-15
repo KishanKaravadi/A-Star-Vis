@@ -10,9 +10,7 @@ import concurrent.futures
 import numpy as np
 import matplotlib.pyplot as plt
 
-WIDTH = 800
-WIN = pygame.display.set_mode((WIDTH, WIDTH))
-pygame.display.set_caption("Leak Finding Algorithm")
+
 
 E = 2.718281828459045
 FPS = 60
@@ -380,7 +378,6 @@ def infinity():
 
 
 def Bot3(win, width, ROWS, square, ALPHA):
-
     # assert square >= 3
     grid = make_grid(ROWS, width)
 
@@ -391,7 +388,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
     # for key, value in dists:
     #     print(type(key), type(value))
 
-    may_contain_leak = may_contain_leak - {random_bot}
+
 
     start = random_bot
     end = random_leak
@@ -505,7 +502,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
             while (start.get_pos() != random_leak.get_pos()):
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
-
+                probabilities = bot_enters_cell_probability_update(
+                                probabilities, start.get_pos())
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
 
@@ -555,7 +553,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                             if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos():
                                 browncount += 1
                         if browncount == 2:
-                            return total_actions
+                            time = False
+                            run = False
                     if i.is_path() or i.get_pos() == next_location.get_pos():
                         # print(i.get_pos())
                         # print(i.get_pos(),probabilities)
@@ -567,7 +566,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                         start = i
                         # print(start.get_pos())
                         if start.get_pos() == random_leak.get_pos():
-                            return total_actions
+                            time = False
+                            run = False
                         else:
                             probabilities = bot_enters_cell_probability_update(
                                 probabilities, start.get_pos())
@@ -578,7 +578,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 draw(win, grid, ROWS, width)
             time = False
 
-    pygame.quit()
+    #pygame.quit()
     return total_actions
 
 
@@ -594,7 +594,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
 #     # count = 0
 #     for i in range(1, 2):
 #         count_set += 1
-#         print(count_set)
+#         #print(count_set)
 #         for _ in range(1):
 #             # count += 1
 #             # print(count)
@@ -606,6 +606,9 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
 
 def run_bot3(alpha):
+    WIDTH = 800
+    WIN = pygame.display.set_mode((WIDTH, WIDTH))
+    pygame.display.set_caption("Leak Finding Algorithm")
     ROWS = 30
     total_actions = 0
     count = 0
@@ -617,14 +620,15 @@ def run_bot3(alpha):
             count -= 1
         count += 1
         print(count, flush=True)
+    pygame.quit()
     return total_actions/(count)
 
 
-def main(WIN, WIDTH):
+def main():
     success = defaultdict(int)
 
-    with ProcessPoolExecutor(max_workers=5) as executor:
-        alphas = [i / 200 for i in range(1, 21)]
+    with ProcessPoolExecutor(max_workers=10) as executor:
+        alphas = [i / 1000 for i in range(1, 101)]
 
         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
         count = 0
@@ -647,9 +651,9 @@ def main(WIN, WIDTH):
     plt.title('Alpha vs Total Actions')
     plt.xlabel('Alpha')
     plt.ylabel('Total Actions')
-    plt.grid(True)
+    plt.grid(False)
     plt.savefig('bot_3.png')
 
 
 if __name__ == "__main__":
-    main(WIN, WIDTH)
+    main()
