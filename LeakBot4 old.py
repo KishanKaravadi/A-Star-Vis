@@ -1,22 +1,12 @@
-from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import concurrent.futures
 from collections import defaultdict, deque
 import math
 import pygame
 import random
 from queue import PriorityQueue
-import concurrent.futures
-import numpy as np
-import matplotlib.pyplot as plt
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("Leak Finding Algorithm")
-
-E = 2.718281828459045
-FPS = 60
-clock = pygame.time.Clock()
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -30,6 +20,7 @@ ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
 BROWN = (79, 46, 13)
+ALPHA = 0.5
 
 
 class Spot:
@@ -181,7 +172,7 @@ def reconstruct_path(came_from, current, draw):
         hi += 1
         current = came_from[current]
         current.make_path()
-        # draw()# Here
+        draw()
     return hi
 
 # Manhattan distance from point to end
@@ -200,7 +191,6 @@ def algorithm(draw, grid, start, end):
     open_set = PriorityQueue()
     open_set.put((0, count, start))
     came_from = {}
-    came_to = {}
 
     # heuristic
     g_score = {spot: float('inf') for row in grid for spot in row}
@@ -227,14 +217,13 @@ def algorithm(draw, grid, start, end):
                 for spot in row:
                     if not (spot.is_end() or spot.is_start() or spot.is_barrier() or spot.is_path()):
                         spot.reset()
-            return (True, length, came_from, came_to)
+            return (True, length, came_from)
 
         for neighbor in current.neighbors:
             temp_g_score = g_score[current] + 1
 
             if temp_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
-                came_to[current] = neighbor
                 g_score[neighbor] = temp_g_score
                 f_score[neighbor] = temp_g_score + \
                     h(neighbor.get_pos(), end.get_pos())
@@ -247,7 +236,7 @@ def algorithm(draw, grid, start, end):
         if current != start:
             current.make_closed()
 
-    return (False, -1, came_from, came_to)
+    return (False, -1, came_from)
 
 
 def make_grid(rows, width):
@@ -340,9 +329,14 @@ def make_ship(draw, grid, rows, square):
 
     random_bot = random.choice(list(white))
     random_bot.make_start()
+    x, y = random_bot.get_pos()
+    detection_square_spots = set()
+    for i in range((-square//2), (square//2)+1):
+        for j in range((-square//2), (square//2)+1):
+            if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
+                detection_square_spots.add(grid[x+i][y+j])
 
-    random_leak = random.choice(list(white))
-    # random_leak2 = random.choice(list(white - {random_leak}))
+    random_leak = random.choice(list(white - detection_square_spots))
     random_leak.make_end()
 
     return (white, random_bot, random_leak)
@@ -371,7 +365,42 @@ def infinity():
     return float('inf')
 
 
-def Bot3(win, width, ROWS, square, ALPHA):
+def Bot3(win, width, ROWS, square):
+    def check_square(spot, leak):
+        x, y = spot.get_pos()
+        det_square = set()
+        border = set()
+        ans = False
+        k = square//2
+        for i in range(-k-1, k+2):
+            for j in range(-k-1, k+2):
+                if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
+                    if i == -k-1 or i == k+1 or j == -k-1 or j == k+1:
+                        border.add(grid[x+i][y+j])
+                    else:
+                        det_square.add(grid[x+i][y+j])
+                        if grid[x+i][y+j] == leak:
+                            ans = True
+        return ans, det_square, border
+
+    def create_dist_matrix(may_contain_leak):
+        dists = defaultdict(float('inf'))
+
+        for spot in may_contain_leak:
+            for row in grid:
+                for l in row:
+                    if (l.is_path() or l.is_open() or l.is_closed()):
+                        l.reset()
+                    l.update_neighbors(grid)
+                    l.update_unres_neighbors(grid)
+            for row in grid:
+                for l in row:
+                    if l.is_white() and dists[(spot, l)] != 0:
+                        _, dist, came_from = algorithm(lambda: draw(win, grid, ROWS, width),
+                                                       grid, spot, l)
+                        dists[(spot, l)] = dist
+                        dists[(l, spot)] = dist
+        return dists
 
     # assert square >= 3
     grid = make_grid(ROWS, width)
@@ -398,50 +427,47 @@ def Bot3(win, width, ROWS, square, ALPHA):
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
 
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-
+        probability_matrix[bot_location] = 0
         for key in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
-            denom = 1 - probability_matrix[bot_location]
+            denom = sum(
+                probability_matrix[key2] for key2 in probability_matrix if key2 != bot_location)
             # if denom != 0 and not math.isinf(denom):
-            assert denom <= 1
             probability_matrix[key] = probability_matrix[key] / denom
-        probability_matrix[bot_location] = 0
         return probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
-        denom = sum(
+        for key in probability_matrix:
+            denom = sum(
                 probability_matrix[key2] *
-                E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))
+                math.exp((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))
                 for key2 in probability_matrix
                 if key2 != bot_location
             )
-        for key in probability_matrix:
-            
             if denom != 0 and not math.isinf(denom):
                 probability_matrix[key] = (
                     probability_matrix[key] *
-                    E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1))
+                    math.exp((-1 * ALPHA) * (dists[(bot_location, key)] - 1))
                 ) / denom
 
         return probability_matrix
 
     def no_beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
-        denom = sum(
+        for key in probability_matrix:
+            denom = sum(
                 probability_matrix[key2] *
-                (1 - E**((-1 * ALPHA) *
+                (1 - math.exp((-1 * ALPHA) *
                  (dists[(bot_location, key2)] - 1)))
                 for key2 in probability_matrix
                 if key2 != bot_location
             )
-        for key in probability_matrix:
-            
             if denom != 0 and not math.isinf(denom):
 
                 probability_matrix[key] = (
-                    probability_matrix[key] * (1 - E**((-1 * ALPHA)
+                    probability_matrix[key] * (1 - math.exp((-1 * ALPHA)
                                                * (dists[(bot_location, key)] - 1)))
                 ) / denom
         return probability_matrix
@@ -459,76 +485,68 @@ def Bot3(win, width, ROWS, square, ALPHA):
     time = True
     total_actions = 0
 
-    queue = deque()
-    dists = defaultdict(infinity)
-    for og_nei in may_contain_leak:
-        queue.append(og_nei)
-        dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
-        while queue:
-
-            curr = queue.popleft()
-
-            for nei in curr.neighbors:
-                if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
-                    continue
-                else:
-                    dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
-                        og_nei.get_pos(), curr.get_pos())]+1
-                    dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
-                        og_nei.get_pos(), nei.get_pos())]
-
-                    queue.append(nei)
-
     while run:
-        clock.tick(FPS)
         for row in grid:
             for spot in row:
                 spot.update_neighbors(grid)
                 spot.update_unres_neighbors(grid)
-        # draw(win, grid, ROWS, width)#Here
+        draw(win, grid, ROWS, width)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
         if time:
-            next_location = None
-            #print(start.get_pos())
+
             # pseudocode: while bot_location != leak_location:
             while (start.get_pos() != random_leak.get_pos()):
                 # for _ in range(100):
-                #print(sum(probabilities.values()))
-                
+                # print(sum(probabilities.values()))
+                queue = deque()
+                dists = defaultdict(infinity)
 
+                for og_nei in may_contain_leak:
+                    queue.append(og_nei)
+                    dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
+                    while queue:
+
+                        curr = queue.popleft()
+
+                        for nei in curr.neighbors:
+                            if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
+                                continue
+                            else:
+                                dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
+                                    og_nei.get_pos(), curr.get_pos())]+1
+                                dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
+                                    og_nei.get_pos(), curr.get_pos())]
+
+                                queue.append(nei)
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
-
+                beep = random.random() <= (
+                    math.exp((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
                 # print("beep: ", beep, math.exp((-1*ALPHA) *(dists[start.get_pos(), random_leak.get_pos()] - 1))),
                 # Run Sense
                 # removed all leak_present code here as no detection square for bot 3
+                total_actions += 1
+                if beep:
+                    probabilities = beep_probability_update(
+                        probabilities, start.get_pos())
+                else:
+                    probabilities = no_beep_probability_update(
+                        probabilities, start.get_pos())
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
+                if sense_again or beep:
 
-                # if not next_location or start.get_pos() == next_location.get_pos():
-                if sense_again:
-                    
-                    total_actions += 1
-                    beep = random.random() <= (
-                        E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
-                    if beep:
-                        #print("beep")
-                        probabilities = beep_probability_update(
-                            probabilities, start.get_pos())
-                    else:
-                        probabilities = no_beep_probability_update(
-                            probabilities, start.get_pos())
                     next_location = get_location_of_max_probability(
                         probabilities)
                     # print(probabilities)
 
-                    a, temp, came_from, came_to = algorithm(lambda: draw(win, grid, ROWS, width),
-                                                            grid, start, next_location)
-                    # total_actions += temp
+                    a, temp, came_from = algorithm(lambda: draw(win, grid, ROWS, width),
+                                                   grid, start, next_location)
+                    total_actions += temp
                     # print(len(came_from))
 
                 # get path from bot location to the next location found
@@ -536,38 +554,29 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 random_leak.make_color(BROWN)
 
                 # while i!= next_location:
-                # i = came_to[start]
-
-                # print(i.get_pos(), start.get_pos())
-
                 for i in start.neighbors:
-
                     if i.get_pos() == random_leak.get_pos():
-                        browncount = 0
-                        for j in i.neighbors:
-                            if j.is_path() or j.get_pos()==start.get_pos() or j.get_pos() == next_location.get_pos():
-                                browncount += 1
-                        if browncount == 2:
-                            return total_actions
-                    if i.is_path() or i.get_pos() == next_location.get_pos():
-                        # print(i.get_pos())
-                        # print(i.get_pos(),probabilities)
-                        # pygame.time.delay(100)
+                        return total_actions
+                    else:
+                        if i.is_path() or i.get_pos() == next_location.get_pos():
+                            # print(i.get_pos())
+                            # print(i.get_pos(),probabilities)
+                            # pygame.time.delay(100)
 
-                        i.make_start()
-                        # may_contain_leak = may_contain_leak - {i}
-                        start.reset()
-                        start = i
-                        # print(start.get_pos())
-                        if start.get_pos() == random_leak.get_pos():
-                            return total_actions
-                        else:
-                            probabilities = bot_enters_cell_probability_update(
-                                probabilities, start.get_pos())
-                            # print("reached")
-                            #probabilities[start.get_pos()] = 0
-                            total_actions += 1
+                            i.make_start()
+                            # may_contain_leak = may_contain_leak - {i}
+                            start.reset()
+                            start = i
+                            # print(start.get_pos())
+                            if start.get_pos() == random_leak.get_pos():
+                                return total_actions
+                            else:
+                                probabilities = bot_enters_cell_probability_update(
+                                    probabilities, start.get_pos())
+                                # print("reached")
+                                probabilities[start.get_pos()] = 0
                 # pygame.time.delay(1000)
+
                 draw(win, grid, ROWS, width)
             time = False
 
@@ -578,65 +587,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
 def main(win, width):
     ROWS = 30
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    success = defaultdict(int)
-    count_set = 0
-    # count = 0
-    for i in range(1, 2):
-        count_set += 1
-        print(count_set)
-        for _ in range(1):
-            # count += 1
-            # print(count)
-            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-    print(success)
+    actions = Bot3(win, width,  ROWS, 3)
+    print(actions)
 
 
-# Your existing main method
-
-
-# def run_bot3(alpha):
-#     ROWS = 30
-#     total_actions = 0
-#     for _ in range(150):
-#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
-#     return total_actions/150
-
-
-# def main(WIN, WIDTH):
-#     success = defaultdict(int)
-
-#     with ProcessPoolExecutor(max_workers=5) as executor:
-#         alphas = [i / 200 for i in range(1, 21)]
-
-#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
-
-#         for future in as_completed(futures):
-#             alpha = futures[future]
-#             try:
-#                 result = future.result()
-#                 success[alpha] += result
-#             except Exception as e:
-#                 print(f"Error in execution for alpha={alpha}: {e}")
-
-#     print(success)
-#     alphas, total_actions = zip(*sorted(success.items()))
-
-#     # Convert to NumPy arrays
-#     alphas = np.array(alphas)
-#     total_actions = np.array(total_actions)
-
-#     # Create the plot
-#     plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
-#     plt.title('Alpha vs Total Actions')
-#     plt.xlabel('Alpha')
-#     plt.ylabel('Total Actions')
-#     plt.grid(True)
-#     plt.savefig('scatter_plot.png')
-
-
-if __name__ == "__main__":
-    main(WIN, WIDTH)
+main(WIN, WIDTH)
