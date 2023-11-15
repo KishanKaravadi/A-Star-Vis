@@ -428,15 +428,15 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 probability_matrix[(cell.get_pos(),bot_location)] = 0
                 probability_matrix[(bot_location, cell.get_pos())] = 0
         #key is j, key 2 is k, key 4 is j', key 3 is k' bot_location is i
-        for (key,key2) in probability_matrix:
-            #print((key,key2))
-            denom = sum(
+        denom = sum(
                 probability_matrix[(key4,key3)] * 
                 (1 - ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key4)] - 1))) * 
                       (1 - E**((-1 * ALPHA) * (dists[(bot_location, key3)] - 1)))))
                 for (key4,key3) in probability_matrix
                 if key3 != bot_location and key4 != bot_location and key3 != key4
             )
+        for (key,key2) in probability_matrix:
+            #print((key,key2))
             if denom != 0 and not math.isinf(denom) and key != bot_location and key2 != bot_location:
                 probability_matrix[(key,key2)] = (
                     probability_matrix[(key,key2)] * 
@@ -452,16 +452,16 @@ def Bot3(win, width, ROWS, square, ALPHA):
                 probability_matrix[(cell.get_pos(),bot_location)] = 0
                 probability_matrix[(bot_location, cell.get_pos())] = 0
         #key is j, key 2 is k, key 4 is j', key 3 is k' bot_location is i
-        for (key,key2) in probability_matrix:
-            #print((key,key2))
-            #print("h")
-            denom = sum(
+        denom = sum(
                 probability_matrix[(key4,key3)] * 
                 ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key4)] - 1))) * 
                  (1 - E**((-1 * ALPHA) * (dists[(bot_location, key3)] - 1))))
                 for (key4,key3) in probability_matrix
                 if key3 != bot_location and key4!= bot_location and key3 != key4
             )
+        for (key,key2) in probability_matrix:
+            #print((key,key2))
+            #print("h")
             if denom != 0 and not math.isinf(denom) and key != bot_location and key2!= bot_location:
                 probability_matrix[(key,key2)] = (
                     probability_matrix[(key,key2)] * 
@@ -511,19 +511,10 @@ def Bot3(win, width, ROWS, square, ALPHA):
             print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
             counter = 0
-            while (counter < 2):
-                # for _ in range(100):
-                print(sum(probabilities.values()))
-                queue = deque()
-                dists = defaultdict(infinity)
 
-                # Find next spot to explore
-                sense_again = all(not i.is_path() for i in start.neighbors)
-
-                # if not next_location or start.get_pos() == next_location.get_pos():
-                if sense_again:
-                    
-                    for og_nei in may_contain_leak:
+            queue = deque()
+            dists = defaultdict(infinity)
+            for og_nei in may_contain_leak:
                         queue.append(og_nei)
                         dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
                         while queue:
@@ -539,6 +530,18 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                         og_nei.get_pos(), nei.get_pos())]
 
                                     queue.append(nei)
+
+            while (counter < 2):
+                # for _ in range(100):
+                print(sum(probabilities.values()))
+                
+
+                # Find next spot to explore
+                sense_again = all(not i.is_path() for i in start.neighbors)
+
+                # if not next_location or start.get_pos() == next_location.get_pos():
+                if sense_again:
+                    
                     #print("reached")
                     total_actions += 1
                     
