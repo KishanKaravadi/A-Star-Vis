@@ -612,7 +612,7 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for i in range(1500):
+    for i in range(150):
         try:
             total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
@@ -631,7 +631,7 @@ def run_bot3(alpha):
 
 def main():
     success = defaultdict(int)
-    alphas = [i / 1000 for i in range(1, 101)]
+    alphas = [i / 50 for i in range(1, 51)]
     with ProcessPoolExecutor(max_workers=10) as executor:
         
 
