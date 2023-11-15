@@ -34,6 +34,14 @@ BROWN = (79, 46, 13)
 
 class Spot:
     def __init__(self, row, col, width, total_rows) -> None:
+        """
+        Initialize a Spot object representing a cell in the grid.
+
+        Args:
+            row: Row index of the cell.
+            col: Column index of the cell.
+            width: Width of the cell in the grid.
+        """
         self.row = row
         self.col = col
         self.x = row * width
@@ -412,13 +420,13 @@ def Bot3(win, width, ROWS, square, ALPHA):
     def beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
         denom = sum(
-                probability_matrix[key2] *
-                E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))
-                for key2 in probability_matrix
-                if key2 != bot_location
-            )
+            probability_matrix[key2] *
+            E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))
+            for key2 in probability_matrix
+            if key2 != bot_location
+        )
         for key in probability_matrix:
-            
+
             if denom != 0 and not math.isinf(denom):
                 probability_matrix[key] = (
                     probability_matrix[key] *
@@ -430,14 +438,14 @@ def Bot3(win, width, ROWS, square, ALPHA):
     def no_beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
         denom = sum(
-                probability_matrix[key2] *
-                (1 - E**((-1 * ALPHA) *
-                 (dists[(bot_location, key2)] - 1)))
-                for key2 in probability_matrix
-                if key2 != bot_location
-            )
+            probability_matrix[key2] *
+            (1 - E**((-1 * ALPHA) *
+                     (dists[(bot_location, key2)] - 1)))
+            for key2 in probability_matrix
+            if key2 != bot_location
+        )
         for key in probability_matrix:
-            
+
             if denom != 0 and not math.isinf(denom):
 
                 probability_matrix[key] = (
@@ -492,12 +500,11 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
         if time:
             next_location = None
-            #print(start.get_pos())
+            # print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
             while (start.get_pos() != random_leak.get_pos()):
                 # for _ in range(100):
-                #print(sum(probabilities.values()))
-                
+                # print(sum(probabilities.values()))
 
                 # probability of hearing beep in cell bot_location due to leak in leak_location
                 # print(dists)
@@ -511,12 +518,12 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
                 # if not next_location or start.get_pos() == next_location.get_pos():
                 if sense_again:
-                    
+
                     total_actions += 1
                     beep = random.random() <= (
                         E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
                     if beep:
-                        #print("beep")
+                        # print("beep")
                         probabilities = beep_probability_update(
                             probabilities, start.get_pos())
                     else:
@@ -545,7 +552,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                     if i.get_pos() == random_leak.get_pos():
                         browncount = 0
                         for j in i.neighbors:
-                            if j.is_path() or j.get_pos()==start.get_pos() or j.get_pos() == next_location.get_pos():
+                            if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos():
                                 browncount += 1
                         if browncount == 2:
                             return total_actions
@@ -565,7 +572,7 @@ def Bot3(win, width, ROWS, square, ALPHA):
                             probabilities = bot_enters_cell_probability_update(
                                 probabilities, start.get_pos())
                             # print("reached")
-                            #probabilities[start.get_pos()] = 0
+                            # probabilities[start.get_pos()] = 0
                             total_actions += 1
                 # pygame.time.delay(1000)
                 draw(win, grid, ROWS, width)
@@ -575,67 +582,73 @@ def Bot3(win, width, ROWS, square, ALPHA):
     return total_actions
 
 
-def main(win, width):
-    ROWS = 30
-    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    success = defaultdict(int)
-    count_set = 0
-    # count = 0
-    for i in range(1, 2):
-        count_set += 1
-        print(count_set)
-        for _ in range(1):
-            # count += 1
-            # print(count)
-            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-    print(success)
+# def main(win, width):
+#     ROWS = 30
+#     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     success = defaultdict(int)
+#     count_set = 0
+#     # count = 0
+#     for i in range(1, 2):
+#         count_set += 1
+#         print(count_set)
+#         for _ in range(1):
+#             # count += 1
+#             # print(count)
+#             success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
+#     print(success)
 
 
 # Your existing main method
 
 
-# def run_bot3(alpha):
-#     ROWS = 30
-#     total_actions = 0
-#     for _ in range(150):
-#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
-#     return total_actions/150
+def run_bot3(alpha):
+    ROWS = 30
+    total_actions = 0
+    count = 0
+    for _ in range(150):
+        try:
+            total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
+        except Exception as e:
+            print(f"Error in execution for alpha={alpha}: {e}")
+            count -= 1
+        count += 1
+        print(count, flush=True)
+    return total_actions/(count)
 
 
-# def main(WIN, WIDTH):
-#     success = defaultdict(int)
+def main(WIN, WIDTH):
+    success = defaultdict(int)
 
-#     with ProcessPoolExecutor(max_workers=5) as executor:
-#         alphas = [i / 200 for i in range(1, 21)]
+    with ProcessPoolExecutor(max_workers=5) as executor:
+        alphas = [i / 200 for i in range(1, 21)]
 
-#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+        count = 0
+        for future in as_completed(futures):
+            alpha = futures[future]
+            result = future.result()
+            success[alpha] += result
+            count += 1
+            print(count, alpha)
 
-#         for future in as_completed(futures):
-#             alpha = futures[future]
-#             try:
-#                 result = future.result()
-#                 success[alpha] += result
-#             except Exception as e:
-#                 print(f"Error in execution for alpha={alpha}: {e}")
+    print(success)
+    alphas, total_actions = zip(*sorted(success.items()))
 
-#     print(success)
-#     alphas, total_actions = zip(*sorted(success.items()))
+    # Convert to NumPy arrays
+    alphas = np.array(alphas)
+    total_actions = np.array(total_actions)
 
-#     # Convert to NumPy arrays
-#     alphas = np.array(alphas)
-#     total_actions = np.array(total_actions)
-
-#     # Create the plot
-#     plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
-#     plt.title('Alpha vs Total Actions')
-#     plt.xlabel('Alpha')
-#     plt.ylabel('Total Actions')
-#     plt.grid(True)
-#     plt.savefig('scatter_plot.png')
+    # Create the plot
+    plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
+    plt.title('Alpha vs Total Actions')
+    plt.xlabel('Alpha')
+    plt.ylabel('Total Actions')
+    plt.grid(True)
+    plt.savefig('bot_3.png')
 
 
 if __name__ == "__main__":
