@@ -513,8 +513,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
         make_brown = True
         make_brown2 = True
 
-
-
         if time:
             next_location = None
             print(start.get_pos())
@@ -544,15 +542,14 @@ def Bot3(win, width, ROWS, square, ALPHA):
             while (counter < 2):
                 # for _ in range(100):
                 print(sum(probabilities.values()))
-                
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
 
                 # if not next_location or start.get_pos() == next_location.get_pos():
                 if sense_again:
-                    
-                    #print("reached")
+
+                    # print("reached")
                     total_actions += 1
 
                     beep = (1 - ((1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) *

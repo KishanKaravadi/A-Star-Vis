@@ -5,7 +5,7 @@ from collections import defaultdict, deque
 import gc
 import math
 import traceback
-import pygame
+# import pygame
 import random
 from queue import PriorityQueue
 import concurrent.futures
@@ -14,12 +14,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 WIDTH = 800
-WIN = pygame.display.set_mode((WIDTH, WIDTH))
-pygame.display.set_caption("Leak Finding Algorithm")
+# WIN = pygame.display.set_mode((WIDTH, WIDTH))
+# pygame.display.set_caption("Leak Finding Algorithm")
 
 E = 2.718281828459045
 FPS = 60
-clock = pygame.time.Clock()
+# clock = pygame.time.Clock()
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -215,9 +215,9 @@ def algorithm(draw, grid, start, end):
     open_set_hash = {start}
 
     while not open_set.empty():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
 
         current = open_set.get()[2]
         open_set_hash.remove(current)
@@ -472,14 +472,14 @@ def Bot4(width, ROWS, square, ALPHA):
                     queue.append(nei)
 
     while run:
-        clock.tick(FPS)
+        # clock.tick(FPS)
         for row in grid:
             for spot in row:
                 spot.update_neighbors(grid)
                 spot.update_unres_neighbors(grid)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         run = False
 
         if time:
             next_location = None
