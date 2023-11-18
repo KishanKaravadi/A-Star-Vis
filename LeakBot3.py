@@ -14,7 +14,7 @@ from multiprocessing import Pool
 import gc
 
 
-E = 2.718281828459045
+E = math.e
 FPS = 60
 # clock = pygame.time.Clock()
 
