@@ -2,7 +2,9 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import concurrent.futures
 from collections import defaultdict, deque
+import gc
 import math
+import traceback
 import pygame
 import random
 from queue import PriorityQueue
@@ -372,7 +374,7 @@ def infinity():
     return float('inf')
 
 
-def Bot3(win, width, ROWS, square, ALPHA):
+def Bot8(win, width, ROWS, square, ALPHA):
 
     # assert square >= 3
     grid = make_grid(ROWS, width)
@@ -500,6 +502,26 @@ def Bot3(win, width, ROWS, square, ALPHA):
     time = True
     total_actions = 0
 
+    queue = deque()
+    dists = defaultdict(infinity)
+
+    for og_nei in may_contain_leak:
+        queue.append(og_nei)
+        dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
+        while queue:
+            curr = queue.popleft()
+
+            for nei in curr.neighbors:
+                if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
+                    continue
+                else:
+                    dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
+                        og_nei.get_pos(), curr.get_pos())]+1
+                    dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
+                        og_nei.get_pos(), nei.get_pos())]
+
+                    queue.append(nei)
+
     while run:
         clock.tick(FPS)
         for row in grid:
@@ -513,31 +535,11 @@ def Bot3(win, width, ROWS, square, ALPHA):
         make_brown = True
         make_brown2 = True
 
-        for og_nei in may_contain_leak:
-            queue.append(og_nei)
-            dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
-            while queue:
-                curr = queue.popleft()
-
-                for nei in curr.neighbors:
-                    if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
-                        continue
-                    else:
-                        dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
-                            og_nei.get_pos(), curr.get_pos())]+1
-                        dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
-                            og_nei.get_pos(), nei.get_pos())]
-
-                        queue.append(nei)
-
         if time:
             next_location = None
             print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
             counter = 0
-
-            queue = deque()
-            dists = defaultdict(infinity)
 
             while (counter < 2):
                 # for _ in range(100):
@@ -731,14 +733,14 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
 def run_bot3(alpha):
     WIDTH = 800
-    # WIN = pygame.display.set_mode((WIDTH, WIDTH))
+    WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
     ROWS = 30
     total_actions = 0
     count = 0
     for i in range(15):
         try:
-            total_actions += Bot7(WIDTH, ROWS, 3, alpha)
+            total_actions += Bot8(WIN, WIDTH, ROWS, 3, alpha)
         except Exception as e:
             print(f"Error in execution for alpha={alpha}: {e}", flush=True)
             traceback.print_exc()
