@@ -513,6 +513,23 @@ def Bot3(win, width, ROWS, square, ALPHA):
         make_brown = True
         make_brown2 = True
 
+        for og_nei in may_contain_leak:
+            queue.append(og_nei)
+            dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
+            while queue:
+                curr = queue.popleft()
+
+                for nei in curr.neighbors:
+                    if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
+                        continue
+                    else:
+                        dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
+                            og_nei.get_pos(), curr.get_pos())]+1
+                        dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
+                            og_nei.get_pos(), nei.get_pos())]
+
+                        queue.append(nei)
+
         if time:
             next_location = None
             print(start.get_pos())
@@ -521,23 +538,6 @@ def Bot3(win, width, ROWS, square, ALPHA):
 
             queue = deque()
             dists = defaultdict(infinity)
-
-            for og_nei in may_contain_leak:
-                queue.append(og_nei)
-                dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
-                while queue:
-                    curr = queue.popleft()
-
-                    for nei in curr.neighbors:
-                        if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
-                            continue
-                        else:
-                            dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
-                                og_nei.get_pos(), curr.get_pos())]+1
-                            dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
-                                og_nei.get_pos(), nei.get_pos())]
-
-                            queue.append(nei)
 
             while (counter < 2):
                 # for _ in range(100):
@@ -611,7 +611,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                 print("Leak 1")
                                 counter += 1
                                 if counter == 2:
-                                    return total_actions
+                                    time = False
+                                    run = False
                             elif i.get_pos() == random_leak2.get_pos():
                                 for cell in may_contain_leak:
                                     if cell != random_leak2:
@@ -632,7 +633,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                 print("Leak 2")
                                 counter += 1
                                 if counter == 2:
-                                    return total_actions
+                                    time = False
+                                    run = False
                             # return total_actions
 
                             # return total_actions
@@ -661,7 +663,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                 print("Leak 1")
                                 counter += 1
                                 if counter == 2:
-                                    return total_actions
+                                    time = False
+                                    run = False
                             elif i.get_pos() == random_leak2.get_pos():
                                 for cell in may_contain_leak:
                                     if cell != random_leak2:
@@ -682,7 +685,8 @@ def Bot3(win, width, ROWS, square, ALPHA):
                                 print("Leak 2")
                                 counter += 1
                                 if counter == 2:
-                                    return total_actions
+                                    time = False
+                                    run = False
                         i.make_start()
                         # may_contain_leak = may_contain_leak - {i}
                         start.reset()
@@ -696,73 +700,89 @@ def Bot3(win, width, ROWS, square, ALPHA):
                         total_actions += 1
                 # pygame.time.delay(1000)
                 draw(win, grid, ROWS, width)
+            time = False
+            run = False
 
     pygame.quit()
     return total_actions
 
 
-def main(win, width):
-    ROWS = 30
-    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    # actions = Bot3(win, width,  ROWS, 3, 0.5)
-    # print(actions)
-    success = defaultdict(int)
-    count_set = 0
-    # count = 0
-    for i in range(1, 2):
-        count_set += 1
-        print(count_set)
-        for _ in range(1):
-            # count += 1
-            # print(count)
-            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
-    print(success)
+# def main(win, width):
+#     ROWS = 30
+#     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     # actions = Bot3(win, width,  ROWS, 3, 0.5)
+#     # print(actions)
+#     success = defaultdict(int)
+#     count_set = 0
+#     # count = 0
+#     for i in range(1, 2):
+#         count_set += 1
+#         print(count_set)
+#         for _ in range(1):
+#             # count += 1
+#             # print(count)
+#             success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
+#     print(success)
 
 
 # Your existing main method
 
+def run_bot3(alpha):
+    WIDTH = 800
+    # WIN = pygame.display.set_mode((WIDTH, WIDTH))
+    # pygame.display.set_caption("Leak Finding Algorithm")
+    ROWS = 30
+    total_actions = 0
+    count = 0
+    for i in range(15):
+        try:
+            total_actions += Bot7(WIDTH, ROWS, 3, alpha)
+        except Exception as e:
+            print(f"Error in execution for alpha={alpha}: {e}", flush=True)
+            traceback.print_exc()
+            print("SKLDJFHLSDFH", flush=True)
+            return 0
+            count -= 1
+        count += 1
+        print(count, flush=True)
+    # pygame.quit()
+    print("FINISHED", alpha, flush=True)
+    gc.collect()
+    return total_actions/(count)
 
-# def run_bot3(alpha):
-#     ROWS = 30
-#     total_actions = 0
-#     for _ in range(2):
-#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
-#     return total_actions/2
 
+def main():
+    success = defaultdict(int)
+    alphas = [i / 1000 for i in range(1, 101)]
+    with ProcessPoolExecutor(max_workers=10) as executor:
 
-# def main(WIN, WIDTH):
-#     success = defaultdict(int)
+        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+        count = 0
+        for future in as_completed(futures):
+            alpha = futures[future]
+            result = future.result()
+            success[alpha] += result
+            count += 1
+            print(count, alpha)
 
-#     with ProcessPoolExecutor(max_workers=5) as executor:
-#         alphas = [i / 100 for i in range(1, 11)]
+    print(success)
 
-#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+    alphas, total_actions = zip(*sorted(success.items()))
 
-#         for future in as_completed(futures):
-#             alpha = futures[future]
-#             try:
-#                 result = future.result()
-#                 success[alpha] += result
-#             except Exception as e:
-#                 print(f"Error in execution for alpha={alpha}: {e}")
+    # Convert to NumPy arrays
+    alphas = np.array(alphas)
+    total_actions = np.array(total_actions)
 
-#     print(success)
-#     alphas, total_actions = zip(*sorted(success.items()))
-
-#     # Convert to NumPy arrays
-#     alphas = np.array(alphas)
-#     total_actions = np.array(total_actions)
-
-#     # Create the plot
-#     plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
-#     plt.title('Alpha vs Total Actions')
-#     plt.xlabel('Alpha')
-#     plt.ylabel('Total Actions')
-#     plt.grid(True)
-#     plt.savefig('scatter_plot.png')
+    # Create the plot
+    plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
+    plt.title('Alpha vs Total Actions')
+    plt.xlabel('Alpha')
+    plt.ylabel('Total Actions')
+    plt.grid(False)
+    plt.savefig('bot_7.png')
 
 
 if __name__ == "__main__":
-    main(WIN, WIDTH)
+    main()
