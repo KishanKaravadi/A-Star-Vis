@@ -395,24 +395,33 @@ def Bot3(width, ROWS, square, ALPHA):
 
     # Updates the probabilities every time the bot enters cell
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-
+        #this update is P(leak in cell i given leak in cell j) / P(leak in cell i given cell in j') for each j'
         for key in probability_matrix:
-            # key is position of cell j we want to calculate updated probability for
-            # key 2 is position of every other cell j', used for summation stored in denom
+            #since the sum of the numerator and denominator is equal to 1, we can calculate denominator by doing
+            # 1- P(leak in bot_location) or one minnus our previously believed probability
             denom = 1 - probability_matrix[bot_location]
             probability_matrix[key] = probability_matrix[key] / denom
+        # key is position of cell j we want to calculate updated probability for
         probability_matrix[bot_location] = 0
         return probability_matrix
 
     # Updates all the probabilities every time a beep occurs
     def beep_probability_update(probability_matrix, bot_location):
+        #after we enter a cell where a beep is heard, we know there is no leak in this cell
+        # so we make the probability that the leak is in the current cell to 0
+        
         probability_matrix[bot_location] = 0
+        # after doing so we normalize the remaining probabilities to account for this update
+        #denom represents the summation in the denominator from the probability update calculation
+        #summation of denominator in probability function is P(beep in cell i given leak in cell j') for each j' in open cells
         denom = sum(
             probability_matrix[key2] *
             E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))
             for key2 in probability_matrix
             if key2 != bot_location
         )
+        #Probability calculation uses this sum, to normalize each of the remaining cells' probability to contain the leak, as discussed in class and announcements/discussion posts
+        #probability function numerator uses P(beep in cell i given leak in cell j)
         for key in probability_matrix:
 
             if denom != 0 and not math.isinf(denom):
@@ -425,7 +434,10 @@ def Bot3(width, ROWS, square, ALPHA):
 
     # Updates all the probabilitites every time a beep does not occur
     def no_beep_probability_update(probability_matrix, bot_location):
+        #probability update for no_beep_probability_update follows beep_probability_update 
         probability_matrix[bot_location] = 0
+        #the difference lies in the P(no beep in i given leak in j) probability which is 
+        #1 - P(beep in i given leak in j)
         denom = sum(
             probability_matrix[key2] *
             (1 - E**((-1 * ALPHA) *
@@ -550,8 +562,6 @@ def Bot3(width, ROWS, square, ALPHA):
             run = False
 
     return total_actions
-
-# Your existing main method
 
 
 # Runs the bot in parallel with multiprocessing
