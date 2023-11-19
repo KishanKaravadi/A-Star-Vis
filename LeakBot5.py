@@ -422,10 +422,6 @@ def Bot1(win, width, ROWS, square):
     may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
 
-    # dists = create_dist_matrix(may_contain_leak)
-    # for key, value in dists:
-    #     print(type(key), type(value))
-
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
@@ -449,7 +445,7 @@ def Bot1(win, width, ROWS, square):
             if event.type == pygame.QUIT:
                 run = False
 
-        #if time:
+        # if time:
 
         while (counter < 2):
 
@@ -465,7 +461,6 @@ def Bot1(win, width, ROWS, square):
                 may_contain_leak = may_contain_leak - det_square
             else:
                 may_contain_leak = (det_square & may_contain_leak)
-                #print("HAHAHAHAHHAHAHAHAHAHHAHAHAHAHAHA", may_contain_leak)
 
             # Find next spot to explore
             next_location = None
@@ -488,9 +483,9 @@ def Bot1(win, width, ROWS, square):
                     may_contain_leak.remove(curr)
                     next_location.make_color(BROWN)
                     draw(win, grid, ROWS, width)
-                    #draw()
+                    # draw()
                     break
-                
+
                 for nei in curr.neighbors:
                     if dists[nei.get_pos()] == float('inf'):
                         dists[nei.get_pos()] = dists[curr.get_pos()]+1
@@ -499,7 +494,6 @@ def Bot1(win, width, ROWS, square):
 
             pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
-            #print(distance)
             next_location.make_start()
             start.reset()
             total_actions += distance

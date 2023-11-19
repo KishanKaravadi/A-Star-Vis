@@ -420,7 +420,6 @@ def Bot1(win, width, ROWS, square):
             spot.update_neighbors(grid)
 
     run = True
-    time = True
     total_actions = 0
 
     while run:
@@ -433,27 +432,26 @@ def Bot1(win, width, ROWS, square):
             if event.type == pygame.QUIT:
                 run = False
 
-        #if time:
-
+        # Runs until the bot ends up at the leak
         while (start.get_pos() != random_leak.get_pos()):
-
 
             # Run Sense
             leak_present, det_square, border = check_square(
                 start, random_leak)
-            #print(leak_present, " LEAK STATUS")
+
             total_actions += 1
 
-            # Update may contain leak set
+            # If leak not in detection square, removes the detection square from may_contain_leak
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
+            # Evaluates the intersection of may_contain_leak and detection square if leak is present
             else:
                 may_contain_leak = (det_square & may_contain_leak)
-                #print("HAHAHAHAHHAHAHAHAHAHHAHAHAHAHAHA", may_contain_leak)
 
             # Find next spot to explore
             next_location = None
 
+            # Finds the cell with the shortest location using BFS
             queue = deque()
             dists = defaultdict(infinity)
 
@@ -466,15 +464,14 @@ def Bot1(win, width, ROWS, square):
                 curr = queue.popleft()
 
                 if (curr.is_white() or curr.is_end()) and curr in may_contain_leak:
-                    #print(dists[curr.get_pos()])
-                    #print(dists)
+
                     next_location = curr
                     may_contain_leak.remove(curr)
                     next_location.make_color(BROWN)
                     draw(win, grid, ROWS, width)
-                    #draw()
+
                     break
-                
+
                 for nei in curr.neighbors:
                     if dists[nei.get_pos()] == float('inf'):
                         dists[nei.get_pos()] = dists[curr.get_pos()]+1
@@ -483,23 +480,17 @@ def Bot1(win, width, ROWS, square):
 
             #pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
-            #print(distance)
+
             next_location.make_start()
-            #may_contain_leak.remove(start)
+
             start.reset()
             total_actions += distance
             start = next_location
-            if(start == random_leak):
-                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
-                time = False
+            if (start == random_leak):
+
                 run = False
 
-
-            #for cell in det_square:
-                #cell.make_color(GREY)
-
             draw(win, grid, ROWS, width)
-            #time = False
 
     pygame.quit()
     return total_actions
