@@ -487,7 +487,6 @@ def Bot3(width, ROWS, square, ALPHA):
                 if not works:
                     time = False
                     run = False
-                    break
 
                 total_actions += 1
                 beep = random.random() <= (
@@ -524,7 +523,7 @@ def Bot3(width, ROWS, square, ALPHA):
                         if browncount == 2:
                             time = False
                             run = False
-                            break
+
                     if i.is_path() or i.get_pos() == next_location.get_pos():
 
                         i.make_start()
@@ -534,14 +533,14 @@ def Bot3(width, ROWS, square, ALPHA):
                         if start.get_pos() == random_leak.get_pos():
                             time = False
                             run = False
-                            break
+
                         else:
                             works, probabilities = bot_enters_cell_probability_update(
                                 probabilities, start.get_pos())
                             if not works:
                                 time = False
                                 run = False
-                                break
+
                             total_actions += 1
             time = False
             run = False
@@ -558,7 +557,7 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for i in range(500):
+    for i in range(1):
         try:
             total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
