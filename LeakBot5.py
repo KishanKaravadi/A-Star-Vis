@@ -449,7 +449,7 @@ def Bot1(win, width, ROWS, square):
 
         while (counter < 2):
 
-
+            possible = False
             # Run Sense
             leak_present, det_square, border = check_square(
                 start, random_leak, random_leak2)
@@ -460,7 +460,8 @@ def Bot1(win, width, ROWS, square):
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
             else:
-                may_contain_leak = (det_square & may_contain_leak)
+                possible_leak = (det_square & may_contain_leak)
+                possible = True
 
             # Find next spot to explore
             next_location = None
@@ -475,22 +476,38 @@ def Bot1(win, width, ROWS, square):
             while queue:
 
                 curr = queue.popleft()
+                if(not possible):
+                    if ((curr in may_contain_leak)):
+                        #print(dists[curr.get_pos()])
+                        #print(dists)        
+                        next_location = curr
+                        may_contain_leak.remove(curr)
+                        next_location.make_color(BROWN)
+                        draw(win, grid, ROWS, width)
+                        # draw()
+                        break
 
-                if ((curr in may_contain_leak)):
-                    #print(dists[curr.get_pos()])
-                    #print(dists)        
-                    next_location = curr
-                    may_contain_leak.remove(curr)
-                    next_location.make_color(BROWN)
-                    draw(win, grid, ROWS, width)
-                    # draw()
-                    break
+                    for nei in curr.neighbors:
+                        if dists[nei.get_pos()] == float('inf'):
+                            dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
-                for nei in curr.neighbors:
-                    if dists[nei.get_pos()] == float('inf'):
-                        dists[nei.get_pos()] = dists[curr.get_pos()]+1
+                            queue.append(nei)
+                else:
+                    if ((curr in possible_leak)):
+                        #print(dists[curr.get_pos()])
+                        #print(dists)        
+                        next_location = curr
+                        possible_leak.remove(curr)
+                        next_location.make_color(BROWN)
+                        draw(win, grid, ROWS, width)
+                        # draw()
+                        break
 
-                        queue.append(nei)
+                    for nei in curr.neighbors:
+                        if dists[nei.get_pos()] == float('inf'):
+                            dists[nei.get_pos()] = dists[curr.get_pos()]+1
+
+                            queue.append(nei)
 
             pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
