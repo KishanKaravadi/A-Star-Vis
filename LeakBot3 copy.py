@@ -501,7 +501,7 @@ def Bot3(width, ROWS, square, ALPHA):
 
                 sense_again = all(not i.is_path() for i in start.neighbors)
 
-                if sense_again:
+                if sense_again or beep:
 
                     next_location = get_location_of_max_probability(
                         probabilities)
@@ -557,14 +557,13 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for i in range(1):
+    for i in range(750):
         try:
             total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
             print(f"Error in execution for alpha={alpha}: {e}", flush=True)
             traceback.print_exc()
             print("SKLDJFHLSDFH", flush=True)
-            return 0
             count -= 1
         count += 1
         print(count, flush=True)
