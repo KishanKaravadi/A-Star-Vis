@@ -36,6 +36,7 @@ class Spot:
         self.num_white_nei = 0
         # self.path = False
         self.fire = False
+        self.leak = False
 
     def get_pos(self):
         return self.row, self.col
@@ -64,9 +65,18 @@ class Spot:
     def is_path(self):
         return self.color == PURPLE
 
+    def is_leak(self):
+        return self.leak
+
     def reset(self):
         self.color = WHITE
         # self.path = False
+    
+    def plugged(self):
+        self.leak = False
+
+    def make_leak(self):
+        self.leak = True
 
     def make_color(self, color) -> None:
         self.color = color
@@ -334,13 +344,16 @@ def make_ship(draw, grid, rows, square):
             if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
                 detection_square_spots.add(grid[x+i][y+j])
 
-    try:
-        random_leak = random.choice(list(white - detection_square_spots))
-    except:
-        random_leak = random.choice(list(white))
-    random_leak.make_end()
+    random_leak = random.choice(list(white - detection_square_spots))
+    random_leak2 = random.choice(list(white - {random_leak}))
+    #random_leak.make_end()
+    random_leak.make_color(ORANGE)
+    random_leak2.make_color(ORANGE)
 
-    return (white, random_bot, random_leak)
+    random_leak.make_leak()
+    random_leak2.make_leak()
+
+    return (white, random_bot, random_leak, random_leak2)
 
 
 def draw_grid_lines(win, rows, width):
@@ -368,7 +381,7 @@ def infinity():
 
 def Bot1(win, width, ROWS, square):
     square = (square * 2)+1
-    def check_square(spot, leak, square):
+    def check_square(spot, leak, leak2, square):
         x, y = spot.get_pos()
         det_square = set()
         border = set()
@@ -381,7 +394,7 @@ def Bot1(win, width, ROWS, square):
                         border.add(grid[x+i][y+j])
                     else:
                         det_square.add(grid[x+i][y+j])
-                        if grid[x+i][y+j] == leak:
+                        if (grid[x+i][y+j] == leak and leak.is_leak()) or (grid[x+i][y+j] == leak2 and leak2.is_leak()):
                             ans = True
         return ans, det_square, border
 
@@ -407,25 +420,22 @@ def Bot1(win, width, ROWS, square):
     #assert square >= 3
     grid = make_grid(ROWS, width)
 
-    may_contain_leak, random_bot, random_leak = make_ship(
+    may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
-
-    # dists = create_dist_matrix(may_contain_leak)
-    # for key, value in dists:
-    #     print(type(key), type(value))
 
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    end = random_leak
+    #end = random_leak
 
     for row in grid:
         for spot in row:
             spot.update_neighbors(grid)
 
     run = True
+    time = True
     total_actions = 0
-
+    counter = 0
     while run:
         for row in grid:
             for spot in row:
@@ -436,73 +446,102 @@ def Bot1(win, width, ROWS, square):
             if event.type == pygame.QUIT:
                 run = False
 
-        # Runs until the bot ends up at the leak
-        while (start.get_pos() != random_leak.get_pos()):
+        # if time:
 
+        while (counter < 2):
+
+            possible = False
             # Run Sense
             leak_present, det_square, border = check_square(
-                start, random_leak, square)
+                start, random_leak, random_leak2, square)
 
             a, det_square2, b = check_square(
-                start, random_leak, (square*2)-1)
-
+                start, random_leak, random_leak2, (square*2)-1)
+            #print(leak_present, " LEAK STATUS")
             total_actions += 1
-
-            # If leak not in detection square, removes the detection square from may_contain_leak
+            #print(leak_present)
+            # Update may contain leak set
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
-            # Evaluates the intersection of may_contain_leak and detection square if leak is present
             else:
-                may_contain_leak = (det_square & may_contain_leak)
+                possible_leak = (det_square & may_contain_leak)
+                possible = True
 
             # Find next spot to explore
             next_location = None
+            best_location = None
 
-            # Finds the cell with the shortest location using BFS
             queue = deque()
             dists = defaultdict(infinity)
 
             queue.append(start)
-            best_location = None
+
             distance = 0
             dists[start.get_pos()] = 0
             while queue:
 
                 curr = queue.popleft()
-                if((curr in may_contain_leak) and curr not in det_square2):
-                    best_location = curr
-                    break
+                if(not possible):
+                    if ((curr in may_contain_leak) and not (curr in det_square2)):       
+                        best_location = curr
+                        #print("SDKJFHSKLDF")
+                        #for i in det_square2:
+                            #i.make_color(ORANGE)
+                        break
+                    
+                    if ((curr in may_contain_leak) and (next_location is None)):
+                        next_location = curr
 
-                if ((curr in may_contain_leak) and (next_location is None)):
-                    next_location = curr
-                    #break
+                    for nei in curr.neighbors:
+                        if dists[nei.get_pos()] == float('inf'):
+                            dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
-                for nei in curr.neighbors:
-                    if dists[nei.get_pos()] == float('inf'):
-                        dists[nei.get_pos()] = dists[curr.get_pos()]+1
+                            queue.append(nei)
+                else:
+                    if ((curr in possible_leak) and not (curr in det_square2)):     
+                        best_location = curr
+                        break
+                    if ((curr in possible_leak) and (next_location is None)):     
+                        next_location = curr
 
-                        queue.append(nei)
+                    for nei in curr.neighbors:
+                        if dists[nei.get_pos()] == float('inf'):
+                            dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
+                            queue.append(nei)
+            
             if(not(best_location is None)):
                 next_location = best_location
-            pygame.time.delay(1000)
-            may_contain_leak.remove(next_location)
+            if(not possible):
+                may_contain_leak.remove(next_location)
+            else:
+                possible_leak.remove(next_location)
             next_location.make_color(BROWN)
+            pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
-
             next_location.make_start()
-
             start.reset()
             total_actions += distance
             start = next_location
-            if (start == random_leak):
+            if(start == random_leak):
+                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                counter += 1
+                random_leak.plugged()
+                #random_leak.reset()
+            if(start == random_leak2):
+                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                counter += 1
+                random_leak2.plugged()
+                #random_leak2.reset()
 
-                run = False
-            # for cell in det_square:
-            #     cell.make_color(GREY)
+
+
+            for cell in det_square:
+                cell.make_color(GREY)
 
             draw(win, grid, ROWS, width)
-
+            #time = False
+        run = False
     pygame.quit()
     return total_actions
 
