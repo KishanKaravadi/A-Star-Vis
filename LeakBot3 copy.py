@@ -397,9 +397,12 @@ def Bot3(width, ROWS, square, ALPHA):
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
             denom = 1 - probability_matrix[bot_location]
-            probability_matrix[key] = probability_matrix[key] / denom
+            try:
+                probability_matrix[key] = probability_matrix[key] / denom
+            except:
+                return False, probability_matrix
         probability_matrix[bot_location] = 0
-        return probability_matrix
+        return True, probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
@@ -479,8 +482,12 @@ def Bot3(width, ROWS, square, ALPHA):
         if time:
             next_location = None
             while (start.get_pos() != random_leak.get_pos()):
-                probabilities = bot_enters_cell_probability_update(
+                works, probabilities = bot_enters_cell_probability_update(
                     probabilities, start.get_pos())
+                if not works:
+                    time = False
+                    run = False
+                    break
 
                 total_actions += 1
                 beep = random.random() <= (
@@ -517,6 +524,7 @@ def Bot3(width, ROWS, square, ALPHA):
                         if browncount == 2:
                             time = False
                             run = False
+                            break
                     if i.is_path() or i.get_pos() == next_location.get_pos():
 
                         i.make_start()
@@ -526,9 +534,14 @@ def Bot3(width, ROWS, square, ALPHA):
                         if start.get_pos() == random_leak.get_pos():
                             time = False
                             run = False
+                            break
                         else:
-                            probabilities = bot_enters_cell_probability_update(
+                            works, probabilities = bot_enters_cell_probability_update(
                                 probabilities, start.get_pos())
+                            if not works:
+                                time = False
+                                run = False
+                                break
                             total_actions += 1
             time = False
             run = False
@@ -545,7 +558,7 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for i in range(1500):
+    for i in range(500):
         try:
             total_actions += Bot3(WIDTH, ROWS, 3, alpha)
         except Exception as e:
@@ -590,7 +603,7 @@ def main():
     plt.xlabel('Alpha')
     plt.ylabel('Total Actions')
     plt.grid(False)
-    plt.savefig('bot_3.png')
+    plt.savefig('bot_4.png')
 
 
 if __name__ == "__main__":
