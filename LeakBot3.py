@@ -382,15 +382,18 @@ def infinity():
 def Bot3(width, ROWS, square, ALPHA):
     grid = make_grid(ROWS, width)
 
+    # Gets the number of open cells from the ship
     may_contain_leak, random_bot, random_leak = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
 
     start = random_bot
 
+    # Sets the probabilities to a default value
     probabilities = defaultdict(lambda: 1/len(may_contain_leak))
     for i in may_contain_leak:
         probabilities[i.get_pos()] = 1/len(may_contain_leak)
 
+    # Updates the probabilities every time the bot enters cell
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
 
         for key in probability_matrix:
@@ -401,6 +404,7 @@ def Bot3(width, ROWS, square, ALPHA):
         probability_matrix[bot_location] = 0
         return probability_matrix
 
+    # Updates all the probabilities every time a beep occurs
     def beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
         denom = sum(
@@ -419,6 +423,7 @@ def Bot3(width, ROWS, square, ALPHA):
 
         return probability_matrix
 
+    # Updates all the probabilitites every time a beep does not occur
     def no_beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
         denom = sum(
@@ -438,6 +443,7 @@ def Bot3(width, ROWS, square, ALPHA):
                 ) / denom
         return probability_matrix
 
+    # Returns the row and col of the cell with the highest probability
     def get_location_of_max_probability(probability_matrix):
         # returns key of max probability
         (row, col) = max(probability_matrix, key=probability_matrix.get)
@@ -451,6 +457,7 @@ def Bot3(width, ROWS, square, ALPHA):
     time = True
     total_actions = 0
 
+    # Calculates all the distances in advance and stores them in a hashmap
     queue = deque()
     dists = defaultdict(infinity)
     for og_nei in may_contain_leak:
@@ -478,24 +485,31 @@ def Bot3(width, ROWS, square, ALPHA):
                 spot.update_unres_neighbors(grid)
         if time:
             next_location = None
+            # Runs the code until the start location is the same as the end
             while (start.get_pos() != random_leak.get_pos()):
+                # Gets the new probabilities
                 probabilities = bot_enters_cell_probability_update(
                     probabilities, start.get_pos())
 
+                # Checks if bot is currently moving or not
                 sense_again = all(not i.is_path() for i in start.neighbors)
 
+                # Runs if the bot is currently not moving
                 if sense_again:
 
+                    # The probability of beep occuring
                     total_actions += 1
                     beep = random.random() <= (
                         E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
+                    # Depending  on if beep occurs or not the probabilities get updated
                     if beep:
-                        # print("beep")
                         probabilities = beep_probability_update(
                             probabilities, start.get_pos())
                     else:
                         probabilities = no_beep_probability_update(
                             probabilities, start.get_pos())
+
+                    # Gets the next location with the highest prob and goes there
                     next_location = get_location_of_max_probability(
                         probabilities)
 
@@ -506,8 +520,9 @@ def Bot3(width, ROWS, square, ALPHA):
 
                 random_leak.make_color(BROWN)
 
+                # Edge case
                 for i in start.neighbors:
-
+                    # Checks if the leak is in the vicinity of the path of the movement
                     if i.get_pos() == random_leak.get_pos():
                         browncount = 0
                         for j in i.neighbors:
@@ -516,6 +531,7 @@ def Bot3(width, ROWS, square, ALPHA):
                         if browncount == 2:
                             time = False
                             run = False
+                    # If it is in the path, just move forward, don't end
                     if i.is_path() or i.get_pos() == next_location.get_pos():
 
                         i.make_start()
@@ -526,6 +542,7 @@ def Bot3(width, ROWS, square, ALPHA):
                             time = False
                             run = False
                         else:
+                            # Updates probabilities
                             probabilities = bot_enters_cell_probability_update(
                                 probabilities, start.get_pos())
                             total_actions += 1
@@ -537,6 +554,7 @@ def Bot3(width, ROWS, square, ALPHA):
 # Your existing main method
 
 
+# Runs the bot in parallel with multiprocessing
 def run_bot3(alpha):
     WIDTH = 800
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
