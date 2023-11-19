@@ -463,7 +463,7 @@ def Bot1(win, width, ROWS, square):
 
                 curr = queue.popleft()
 
-                if (curr.is_white() or curr.is_end()) and curr in may_contain_leak:
+                if (curr in may_contain_leak):
 
                     next_location = curr
                     may_contain_leak.remove(curr)
