@@ -364,6 +364,7 @@ def infinity():
 
 
 def Bot1(win, width, ROWS, square):
+    square = (square * 2)+1
     def check_square(spot, leak):
         x, y = spot.get_pos()
         det_square = set()
@@ -499,7 +500,7 @@ def Bot1(win, width, ROWS, square):
 def main(win, width):
     ROWS = 10
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    actions = Bot1(win, width,  ROWS, 3)
+    actions = Bot1(win, width,  ROWS, 1)
     print(actions)
 
 
