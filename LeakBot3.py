@@ -418,7 +418,7 @@ def Bot3(width, ROWS, square, ALPHA):
         probability_matrix[bot_location] = 0
         denom = sum(
             probability_matrix[key2] *
-            E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))
+            (E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1)))
             for key2 in probability_matrix
             if key2 != bot_location
         )
@@ -427,7 +427,7 @@ def Bot3(width, ROWS, square, ALPHA):
             if denom != 0 and not math.isinf(denom):
                 probability_matrix[key] = (
                     probability_matrix[key] *
-                    E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1))
+                    (E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1)))
                 ) / denom
 
         return probability_matrix
@@ -436,8 +436,8 @@ def Bot3(width, ROWS, square, ALPHA):
         probability_matrix[bot_location] = 0
         denom = sum(
             probability_matrix[key2] *
-            (1 - E**((-1 * ALPHA) *
-                     (dists[(bot_location, key2)] - 1)))
+            (1 - (E**((-1 * ALPHA) *
+                     (dists[(bot_location, key2)] - 1))))
             for key2 in probability_matrix
             if key2 != bot_location
         )
@@ -446,9 +446,11 @@ def Bot3(width, ROWS, square, ALPHA):
             if denom != 0 and not math.isinf(denom):
 
                 probability_matrix[key] = (
-                    probability_matrix[key] * (1 - E**((-1 * ALPHA)
-                                               * (dists[(bot_location, key)] - 1)))
+                    probability_matrix[key] * (1 - (E**((-1 * ALPHA)
+                                               * (dists[(bot_location, key)] - 1))))
                 ) / denom
+
+                #print(probability_matrix[key])
         return probability_matrix
 
     def get_location_of_max_probability(probability_matrix):
@@ -536,7 +538,7 @@ def Bot3(width, ROWS, square, ALPHA):
                     # print(len(came_from))
 
                 # get path from bot location to the next location found
-
+                #print(sum(probabilities.values()))
                 random_leak.make_color(BROWN)
 
                 # while i!= next_location:
@@ -552,6 +554,7 @@ def Bot3(width, ROWS, square, ALPHA):
                             if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos():
                                 browncount += 1
                         if browncount == 2:
+                            total_actions += 1
                             time = False
                             run = False
                     if i.is_path() or i.get_pos() == next_location.get_pos():
@@ -609,7 +612,7 @@ def run_bot3(alpha):
     WIDTH = 800
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
-    ROWS = 30
+    ROWS = 50
     total_actions = 0
     count = 0
     for i in range(150):
@@ -631,7 +634,7 @@ def run_bot3(alpha):
 
 def main():
     success = defaultdict(int)
-    alphas = [i / 50 for i in range(1, 51)]
+    alphas = [(i-0.999) / 200 for i in range(1, 21)]
     with ProcessPoolExecutor(max_workers=10) as executor:
         
 

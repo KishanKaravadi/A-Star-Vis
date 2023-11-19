@@ -481,7 +481,7 @@ def Bot1(win, width, ROWS, square):
 
                         queue.append(nei)
 
-            pygame.time.delay(1000)
+            #pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
             #print(distance)
             next_location.make_start()
