@@ -536,8 +536,8 @@ def Bot1(win, width, ROWS, square):
 
 
 
-            for cell in det_square:
-                cell.make_color(GREY)
+            # for cell in det_square:
+            #     cell.make_color(GREY)
 
             draw(win, grid, ROWS, width)
             #time = False
