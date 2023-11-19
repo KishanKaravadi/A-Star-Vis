@@ -36,6 +36,7 @@ class Spot:
         self.num_white_nei = 0
         # self.path = False
         self.fire = False
+        self.leak = False
 
     def get_pos(self):
         return self.row, self.col
@@ -64,9 +65,18 @@ class Spot:
     def is_path(self):
         return self.color == PURPLE
 
+    def is_leak(self):
+        return self.leak
+
     def reset(self):
         self.color = WHITE
         # self.path = False
+    
+    def plugged(self):
+        self.leak = False
+
+    def make_leak(self):
+        self.leak = True
 
     def make_color(self, color) -> None:
         self.color = color
@@ -335,9 +345,15 @@ def make_ship(draw, grid, rows, square):
                 detection_square_spots.add(grid[x+i][y+j])
 
     random_leak = random.choice(list(white - detection_square_spots))
-    random_leak.make_end()
+    random_leak2 = random.choice(list(white - {random_leak}))
+    #random_leak.make_end()
+    random_leak.make_color(ORANGE)
+    random_leak2.make_color(ORANGE)
 
-    return (white, random_bot, random_leak)
+    random_leak.make_leak()
+    random_leak2.make_leak()
+
+    return (white, random_bot, random_leak, random_leak2)
 
 
 def draw_grid_lines(win, rows, width):
@@ -364,7 +380,7 @@ def infinity():
 
 
 def Bot1(win, width, ROWS, square):
-    def check_square(spot, leak):
+    def check_square(spot, leak, leak2):
         x, y = spot.get_pos()
         det_square = set()
         border = set()
@@ -377,7 +393,7 @@ def Bot1(win, width, ROWS, square):
                         border.add(grid[x+i][y+j])
                     else:
                         det_square.add(grid[x+i][y+j])
-                        if grid[x+i][y+j] == leak:
+                        if (grid[x+i][y+j] == leak and leak.is_leak()) or (grid[x+i][y+j] == leak2 and leak2.is_leak()):
                             ans = True
         return ans, det_square, border
 
@@ -403,7 +419,7 @@ def Bot1(win, width, ROWS, square):
     assert square >= 3
     grid = make_grid(ROWS, width)
 
-    may_contain_leak, random_bot, random_leak = make_ship(
+    may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
 
     # dists = create_dist_matrix(may_contain_leak)
@@ -413,7 +429,7 @@ def Bot1(win, width, ROWS, square):
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    end = random_leak
+    #end = random_leak
 
     for row in grid:
         for spot in row:
@@ -422,7 +438,7 @@ def Bot1(win, width, ROWS, square):
     run = True
     time = True
     total_actions = 0
-
+    counter = 0
     while run:
         for row in grid:
             for spot in row:
@@ -435,15 +451,15 @@ def Bot1(win, width, ROWS, square):
 
         #if time:
 
-        while (start.get_pos() != random_leak.get_pos()):
+        while (counter < 2):
 
 
             # Run Sense
             leak_present, det_square, border = check_square(
-                start, random_leak)
+                start, random_leak, random_leak2)
             #print(leak_present, " LEAK STATUS")
             total_actions += 1
-
+            #print(leak_present)
             # Update may contain leak set
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
@@ -465,10 +481,11 @@ def Bot1(win, width, ROWS, square):
 
                 curr = queue.popleft()
 
-                if (curr.is_white() or curr.is_end()) and curr in may_contain_leak:
+                if ((curr in may_contain_leak)):
                     #print(dists[curr.get_pos()])
-                    #print(dists)
+                    #print(dists)        
                     next_location = curr
+                    may_contain_leak.remove(curr)
                     next_location.make_color(BROWN)
                     draw(win, grid, ROWS, width)
                     #draw()
@@ -489,16 +506,23 @@ def Bot1(win, width, ROWS, square):
             start = next_location
             if(start == random_leak):
                 #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
-                time = False
-                run = False
+                counter += 1
+                random_leak.plugged()
+                #random_leak.reset()
+            if(start == random_leak2):
+                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                counter += 1
+                random_leak2.plugged()
+                #random_leak2.reset()
 
 
-            #for cell in det_square:
-                #cell.make_color(GREY)
+
+            # for cell in det_square:
+            #     cell.make_color(GREY)
 
             draw(win, grid, ROWS, width)
             #time = False
-
+        run = False
     pygame.quit()
     return total_actions
 
