@@ -343,8 +343,8 @@ def make_ship(draw, grid, rows, square):
     random_bot = random.choice(list(white))
     random_bot.make_start()
 
-    random_leak = random.choice(list(white))
-    random_leak2 = random.choice(list(white - {random_leak}))
+    random_leak = random.choice(list(white - {random_bot}))
+    random_leak2 = random.choice(list(white - {random_leak} - {random_bot}))
     # random_leak2 = random.choice(list(white - {random_leak}))
     random_leak.make_end()
 
@@ -493,7 +493,7 @@ def Bot7(width, ROWS, square, ALPHA):
             # pseudocode: while bot_location != leak_location:
             counter = 0
             while (counter < 2):
-
+                print(counter, "counter ")
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
                 works, probabilities = bot_enters_cell_probability_update(
@@ -505,26 +505,30 @@ def Bot7(width, ROWS, square, ALPHA):
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
-
+                print(sense_again)
+                if make_brown:
+                    random_leak.make_color(BROWN)
+                if make_brown2:
+                    random_leak2.make_color(BROWN)
                 # if not next_location or start.get_pos() == next_location.get_pos():
                 if sense_again:
-
+                    
                     total_actions += 1
                     if make_brown:
+                        print("1")
                         beep_a = random.random() <= (
                             E**((-1*ALPHA)*(dists[start.get_pos(), random_leak.get_pos()] - 1)))
-                        if beep_a:
-                            pass
                             # print("beep_a", start.get_pos(),
                             # random_leak.get_pos(), random_leak2.get_pos())
                     if make_brown2:
+                        print("2")
                         beep_b = random.random() <= (
                             E**((-1*ALPHA)*(dists[start.get_pos(), random_leak2.get_pos()] - 1)))
-                        if beep_b:
-                            pass
                             # print("beep_b", start.get_pos(),
                             # random_leak.get_pos(), random_leak2.get_pos())
-                    beep = beep_a or beep_b
+                    beep = (beep_a or beep_b)
+                    if(not make_brown and not make_brown2):
+                        return total_actions
                     if beep:
                         probabilities = beep_probability_update(
                             probabilities, start.get_pos())
@@ -544,15 +548,12 @@ def Bot7(width, ROWS, square, ALPHA):
 
                 # while i!= next_location:
                 # i = came_to[start]
-                if make_brown:
-                    random_leak.make_color(BROWN)
-                if make_brown2:
-                    random_leak2.make_color(BROWN)
+                
 
                 # print(i.get_pos(), start.get_pos())
 
                 for i in start.neighbors:
-                    print("j")
+                    
                     if i.is_path() or i.get_pos() == next_location.get_pos():
                         print('hi2')
                         # MAKE NEXT LOCATION BROWN CASE CODE HERE!!!!!
@@ -565,7 +566,7 @@ def Bot7(width, ROWS, square, ALPHA):
                                 for k in may_contain_leak:
                                     probabilities[k.get_pos()] = 1 / \
                                         len(may_contain_leak)
-                                random_leak = random_leak2
+                                #random_leak = random_leak2
                                 make_brown = False
                                 beep_a = False
 
@@ -581,7 +582,7 @@ def Bot7(width, ROWS, square, ALPHA):
                                 for k in may_contain_leak:
                                     probabilities[k.get_pos()] = 1 / \
                                         len(may_contain_leak)
-                                random_leak2 = random_leak
+                                #random_leak2 = random_leak
                                 make_brown2 = False
                                 beep_b = False
 
@@ -628,6 +629,7 @@ def Bot7(width, ROWS, square, ALPHA):
                                 if counter == 2:
                                     time = False
                                     run = False
+                                    return total_actions
                             elif i.get_pos() == random_leak2.get_pos():
                                 probabilities[random_leak2.get_pos()] = 0
                                 may_contain_leak = may_contain_leak - \
@@ -644,6 +646,7 @@ def Bot7(width, ROWS, square, ALPHA):
                                 if counter == 2:
                                     time = False
                                     run = False
+                                    return total_actions
                             return total_actions
 
                             # return total_actions
@@ -681,7 +684,7 @@ def run_bot3(alpha):
     WIDTH = 800
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
-    ROWS = 8
+    ROWS = 4
     total_actions = 0
     count = 0
     for i in range(50):
