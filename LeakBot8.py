@@ -748,7 +748,7 @@ def run_bot3(alpha):
     # pygame.init()
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
-    ROWS = 30
+    ROWS = 4
     total_actions = 0
     count = 0
     for i in range(1):

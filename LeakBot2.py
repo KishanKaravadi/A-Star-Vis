@@ -1,7 +1,11 @@
 from collections import defaultdict, deque
-import pygame
+# import pygame
 import random
 from queue import PriorityQueue
+import traceback
+import gc
+import numpy as np
+import matplotlib.pyplot as plt
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
@@ -368,6 +372,7 @@ def infinity():
 
 def Bot1(win, width, ROWS, square):
     square = (square * 2)+1
+
     def check_square(spot, leak, square):
         x, y = spot.get_pos()
         det_square = set()
@@ -404,7 +409,7 @@ def Bot1(win, width, ROWS, square):
                         dists[(l, spot)] = dist
         return dists
 
-    #assert square >= 3
+    # assert square >= 3
     grid = make_grid(ROWS, width)
 
     may_contain_leak, random_bot, random_leak = make_ship(
@@ -469,13 +474,13 @@ def Bot1(win, width, ROWS, square):
             while queue:
 
                 curr = queue.popleft()
-                if((curr in may_contain_leak) and curr not in det_square2):
+                if ((curr in may_contain_leak) and curr not in det_square2):
                     best_location = curr
                     break
 
                 if ((curr in may_contain_leak) and (next_location is None)):
                     next_location = curr
-                    #break
+                    # break
 
                 for nei in curr.neighbors:
                     if dists[nei.get_pos()] == float('inf'):
@@ -483,7 +488,7 @@ def Bot1(win, width, ROWS, square):
 
                         queue.append(nei)
 
-            if(not(best_location is None)):
+            if (not (best_location is None)):
                 next_location = best_location
             pygame.time.delay(1000)
             may_contain_leak.remove(next_location)

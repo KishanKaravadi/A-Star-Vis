@@ -582,7 +582,7 @@ def run_bot3(alpha):
             print(f"Error in execution for alpha={alpha}: {e}", flush=True)
             traceback.print_exc()
             print("SKLDJFHLSDFH", flush=True)
-            return 0
+            #return 0
             count -= 1
         count += 1
         print(count, flush=True)
