@@ -459,7 +459,7 @@ def Bot1(win, width, ROWS, square):
             # Run Sense
             leak_present, det_square, border = check_square(
                 start, random_leak, random_leak2)
-            # print(leak_present, " LEAK STATUS")
+            #print(leak_present, " LEAK STATUS")
             total_actions += 1
             # print(leak_present)
             # Update may contain leak set
@@ -503,7 +503,7 @@ def Bot1(win, width, ROWS, square):
                         # print(dists[curr.get_pos()])
                         # print(dists)
                         next_location = curr
-                        possible_leak.remove(curr)
+                        may_contain_leak.remove(curr)
                         next_location.make_color(BROWN)
                         draw(win, grid, ROWS, width)
                         # draw()
@@ -515,25 +515,25 @@ def Bot1(win, width, ROWS, square):
 
                             queue.append(nei)
 
-            pygame.time.delay(1000)
+            #pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
             next_location.make_start()
             start.reset()
             total_actions += distance
             start = next_location
             if (start == random_leak):
-                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                #print("NO WAY LEAK FOUND1!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak.plugged()
                 # random_leak.reset()
             if (start == random_leak2):
-                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                #print("NO WAY LEAK FOUND2!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak2.plugged()
                 # random_leak2.reset()
 
-            for cell in det_square:
-                cell.make_color(GREY)
+            # for cell in det_square:
+            #     cell.make_color(GREY)
 
             draw(win, grid, ROWS, width)
             # time = False
