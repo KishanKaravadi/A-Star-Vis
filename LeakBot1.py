@@ -509,7 +509,7 @@ def main(width):
     ROWS = 30
 
     success = {}
-    for k in range(16):
+    for k in range(1, 16):
         total_actions = 0
         count = 0
         for i in range(150):
