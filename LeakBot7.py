@@ -552,6 +552,7 @@ def Bot7(width, ROWS, square, ALPHA):
 
                 for i in start.neighbors:
                     if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
+                        print("hi")
                         browncount = 0
                         for j in i.neighbors:
                             if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos():
