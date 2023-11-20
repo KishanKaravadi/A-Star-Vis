@@ -348,8 +348,8 @@ def make_ship(draw, grid, rows, square):
             if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
                 detection_square_spots.add(grid[x+i][y+j])
 
-    random_leak = random.choice(list(white - detection_square_spots))
-    random_leak2 = random.choice(list(white - {random_leak}))
+    random_leak = random.choice(list(white - detection_square_spots - {random_bot}))
+    random_leak2 = random.choice(list(white - detection_square_spots - {random_leak} - {random_bot}))
     # random_leak.make_end()
     random_leak.make_color(ORANGE)
     random_leak2.make_color(ORANGE)
@@ -545,7 +545,7 @@ def Bot1(win, width, ROWS, square):
 def main(win, width):
     ROWS = 30
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    actions = Bot1(win, width,  ROWS, 1)
+    actions = Bot1(win, width,  ROWS, 15)
     print(actions)
 
 

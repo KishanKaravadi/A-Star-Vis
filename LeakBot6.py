@@ -348,8 +348,8 @@ def make_ship(draw, grid, rows, square):
             if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
                 detection_square_spots.add(grid[x+i][y+j])
 
-    random_leak = random.choice(list(white - detection_square_spots))
-    random_leak2 = random.choice(list(white - {detection_square_spots} - {random_leak}))
+    random_leak = random.choice(list(white - detection_square_spots - {random_bot}))
+    random_leak2 = random.choice(list(white - detection_square_spots - {random_leak} - {random_bot}))
     #random_leak.make_end()
     random_leak.make_color(ORANGE)
     random_leak2.make_color(ORANGE)
@@ -519,7 +519,7 @@ def Bot1(win, width, ROWS, square):
             if(not possible):
                 may_contain_leak.remove(next_location)
             else:
-                possible_leak.remove(next_location)
+                may_contain_leak.remove(next_location)
             next_location.make_color(BROWN)
             pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
