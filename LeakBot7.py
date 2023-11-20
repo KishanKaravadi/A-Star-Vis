@@ -382,7 +382,7 @@ def Bot7(width, ROWS, square, ALPHA):
     may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
 
-    may_contain_leak = may_contain_leak - {random_bot}
+    # may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
 
@@ -401,10 +401,12 @@ def Bot7(width, ROWS, square, ALPHA):
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
             denom = 1 - probability_matrix[bot_location]
-            # if denom != 0 and not math.isinf(denom):
-            probability_matrix[key] = probability_matrix[key] / denom
+            try:
+                probability_matrix[key] = probability_matrix[key] / denom
+            except:
+                return False, probability_matrix
         probability_matrix[bot_location] = 0
-        return probability_matrix
+        return True, probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
         probability_matrix[bot_location] = 0
@@ -493,6 +495,12 @@ def Bot7(width, ROWS, square, ALPHA):
             while (counter < 2):
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
+                works, probabilities = bot_enters_cell_probability_update(
+                    probabilities, start.get_pos())
+                if not works:
+                    return total_actions
+                    time = False
+                    run = False
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
@@ -626,10 +634,14 @@ def Bot7(width, ROWS, square, ALPHA):
                         start = i
                         # print(start.get_pos())
 
-                        probabilities = bot_enters_cell_probability_update(
+                        works, probabilities = bot_enters_cell_probability_update(
                             probabilities, start.get_pos())
+                        if not works:
+                            time = False
+                            run = False
+                            return total_actions
                         # print("reached")
-                        probabilities[start.get_pos()] = 0
+                        # probabilities[start.get_pos()] = 0
                         total_actions += 1
                 # pygame.time.delay(1000)
                 # draw(win, grid, ROWS, width)
@@ -667,14 +679,13 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for i in range(1500):
+    for i in range(500):
         try:
             total_actions += Bot7(WIDTH, ROWS, 3, alpha)
         except Exception as e:
             print(f"Error in execution for alpha={alpha}: {e}", flush=True)
             traceback.print_exc()
             print("SKLDJFHLSDFH", flush=True)
-            return 0
             count -= 1
         count += 1
         print(count, flush=True)
@@ -687,7 +698,7 @@ def run_bot3(alpha):
 def main():
     success = defaultdict(int)
     alphas = [i / 1000 for i in range(1, 101)]
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    with ProcessPoolExecutor(max_workers=5) as executor:
 
         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
         count = 0
