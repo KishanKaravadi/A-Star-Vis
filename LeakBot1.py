@@ -507,10 +507,11 @@ def main(width):
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
     ROWS = 30
-    total_actions = 0
-    count = 0
+
     success = {}
-    for k in range(14):
+    for k in range(16):
+        total_actions = 0
+        count = 0
         for i in range(150):
             try:
                 total_actions += Bot1(width,  ROWS, k)
