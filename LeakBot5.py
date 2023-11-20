@@ -1,5 +1,5 @@
 from collections import defaultdict, deque
-# import pygame
+import pygame
 import random
 from queue import PriorityQueue
 import traceback
@@ -422,7 +422,7 @@ def Bot1(win, width, ROWS, square):
                         dists[(l, spot)] = dist
         return dists
 
-    assert square >= 3
+    # assert square >= 3
     grid = make_grid(ROWS, width)
 
     may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
@@ -532,8 +532,8 @@ def Bot1(win, width, ROWS, square):
                 random_leak2.plugged()
                 # random_leak2.reset()
 
-            # for cell in det_square:
-            #     cell.make_color(GREY)
+            for cell in det_square:
+                cell.make_color(GREY)
 
             draw(win, grid, ROWS, width)
             # time = False
@@ -543,7 +543,7 @@ def Bot1(win, width, ROWS, square):
 
 
 def main(win, width):
-    ROWS = 10
+    ROWS = 30
     # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
     actions = Bot1(win, width,  ROWS, 1)
     print(actions)
