@@ -493,6 +493,7 @@ def Bot7(width, ROWS, square, ALPHA):
             # pseudocode: while bot_location != leak_location:
             counter = 0
             while (counter < 2):
+
                 # for _ in range(100):
                 # print(sum(probabilities.values()))
                 works, probabilities = bot_enters_cell_probability_update(
@@ -551,51 +552,11 @@ def Bot7(width, ROWS, square, ALPHA):
                 # print(i.get_pos(), start.get_pos())
 
                 for i in start.neighbors:
-                    if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
-                        print("hi")
-                        browncount = 0
-                        for j in i.neighbors:
-                            if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos():
-                                browncount += 1
-                        if browncount == 2:
-                            if i.get_pos() == random_leak.get_pos():
-                                probabilities[random_leak.get_pos()] = 0
-                                may_contain_leak = may_contain_leak - \
-                                    {random_leak}
-                                for k in may_contain_leak:
-                                    probabilities[k.get_pos()] = 1 / \
-                                        len(may_contain_leak)
-                                random_leak = random_leak2
-                                make_brown = False
-                                beep_a = False
-
-                                # print("Leak 1")
-                                counter += 1
-                                if counter == 2:
-                                    time = False
-                                    run = False
-                            elif i.get_pos() == random_leak2.get_pos():
-                                probabilities[random_leak2.get_pos()] = 0
-                                may_contain_leak = may_contain_leak - \
-                                    {random_leak2}
-                                for k in may_contain_leak:
-                                    probabilities[k.get_pos()] = 1 / \
-                                        len(may_contain_leak)
-                                random_leak2 = random_leak
-                                make_brown2 = False
-                                beep_b = False
-
-                                # print("Leak 2")
-                                counter += 1
-                                if counter == 2:
-                                    time = False
-                                    run = False
-                            # return total_actions
-
-                            # return total_actions
+                    print("j")
                     if i.is_path() or i.get_pos() == next_location.get_pos():
+                        print('hi2')
                         # MAKE NEXT LOCATION BROWN CASE CODE HERE!!!!!
-                        if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
+                        if i.get_pos() == random_leak.get_pos() or i.get_pos() == random_leak2.get_pos():
 
                             if i.get_pos() == random_leak.get_pos():
                                 probabilities[random_leak.get_pos()] = 0
@@ -644,6 +605,49 @@ def Bot7(width, ROWS, square, ALPHA):
                         # print("reached")
                         # probabilities[start.get_pos()] = 0
                         total_actions += 1
+                    elif i.get_pos() == random_leak.get_pos() or i.get_pos() == random_leak2.get_pos():
+                        print("hi")
+                        browncount = 0
+                        for j in i.neighbors:
+                            if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos() or j.get_color() == BROWN:
+                                browncount += 1
+                        if browncount >= 2:
+                            if i.get_pos() == random_leak.get_pos():
+                                probabilities[random_leak.get_pos()] = 0
+                                may_contain_leak = may_contain_leak - \
+                                    {random_leak}
+                                for k in may_contain_leak:
+                                    probabilities[k.get_pos()] = 1 / \
+                                        len(may_contain_leak)
+                                random_leak = random_leak2
+                                make_brown = False
+                                beep_a = False
+
+                                # print("Leak 1")
+                                counter += 1
+                                if counter == 2:
+                                    time = False
+                                    run = False
+                            elif i.get_pos() == random_leak2.get_pos():
+                                probabilities[random_leak2.get_pos()] = 0
+                                may_contain_leak = may_contain_leak - \
+                                    {random_leak2}
+                                for k in may_contain_leak:
+                                    probabilities[k.get_pos()] = 1 / \
+                                        len(may_contain_leak)
+                                random_leak2 = random_leak
+                                make_brown2 = False
+                                beep_b = False
+
+                                # print("Leak 2")
+                                counter += 1
+                                if counter == 2:
+                                    time = False
+                                    run = False
+                            return total_actions
+
+                            # return total_actions
+
                 # pygame.time.delay(1000)
                 # draw(win, grid, ROWS, width)
             time = False
@@ -677,10 +681,10 @@ def run_bot3(alpha):
     WIDTH = 800
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
-    ROWS = 30
+    ROWS = 8
     total_actions = 0
     count = 0
-    for i in range(500):
+    for i in range(50):
         try:
             total_actions += Bot7(WIDTH, ROWS, 3, alpha)
         except Exception as e:
