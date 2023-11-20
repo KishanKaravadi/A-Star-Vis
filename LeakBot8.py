@@ -345,7 +345,7 @@ def make_ship(draw, grid, rows, square):
     random_bot.make_start()
 
     random_leak = random.choice(list(white - {random_bot}))
-    random_leak2 = random.choice(list(white  - {random_bot} - {random_leak}))
+    random_leak2 = random.choice(list(white - {random_bot} - {random_leak}))
     # random_leak2 = random.choice(list(white - {random_leak}))
     random_leak.make_end()
 

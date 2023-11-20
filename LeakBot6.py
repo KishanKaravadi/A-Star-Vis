@@ -1,7 +1,11 @@
 from collections import defaultdict, deque
-import pygame
+# import pygame
 import random
 from queue import PriorityQueue
+import traceback
+import gc
+import numpy as np
+import matplotlib.pyplot as plt
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))

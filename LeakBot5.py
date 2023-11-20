@@ -1,7 +1,11 @@
 from collections import defaultdict, deque
-import pygame
+# import pygame
 import random
 from queue import PriorityQueue
+import traceback
+import gc
+import numpy as np
+import matplotlib.pyplot as plt
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
@@ -71,7 +75,7 @@ class Spot:
     def reset(self):
         self.color = WHITE
         # self.path = False
-    
+
     def plugged(self):
         self.leak = False
 
@@ -345,8 +349,8 @@ def make_ship(draw, grid, rows, square):
                 detection_square_spots.add(grid[x+i][y+j])
 
     random_leak = random.choice(list(white - detection_square_spots))
-    random_leak2 = random.choice(list(white - {detection_square_spots} - {random_leak}))
-    #random_leak.make_end()
+    random_leak2 = random.choice(list(white - {random_leak}))
+    # random_leak.make_end()
     random_leak.make_color(ORANGE)
     random_leak2.make_color(ORANGE)
 
@@ -381,6 +385,7 @@ def infinity():
 
 def Bot1(win, width, ROWS, square):
     square = (square * 2)+1
+
     def check_square(spot, leak, leak2):
         x, y = spot.get_pos()
         det_square = set()
@@ -426,7 +431,7 @@ def Bot1(win, width, ROWS, square):
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    #end = random_leak
+    # end = random_leak
 
     for row in grid:
         for spot in row:
@@ -454,9 +459,9 @@ def Bot1(win, width, ROWS, square):
             # Run Sense
             leak_present, det_square, border = check_square(
                 start, random_leak, random_leak2)
-            #print(leak_present, " LEAK STATUS")
+            # print(leak_present, " LEAK STATUS")
             total_actions += 1
-            #print(leak_present)
+            # print(leak_present)
             # Update may contain leak set
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
@@ -477,10 +482,10 @@ def Bot1(win, width, ROWS, square):
             while queue:
 
                 curr = queue.popleft()
-                if(not possible):
+                if (not possible):
                     if ((curr in may_contain_leak)):
-                        #print(dists[curr.get_pos()])
-                        #print(dists)        
+                        # print(dists[curr.get_pos()])
+                        # print(dists)
                         next_location = curr
                         may_contain_leak.remove(curr)
                         next_location.make_color(BROWN)
@@ -495,8 +500,8 @@ def Bot1(win, width, ROWS, square):
                             queue.append(nei)
                 else:
                     if ((curr in possible_leak)):
-                        #print(dists[curr.get_pos()])
-                        #print(dists)        
+                        # print(dists[curr.get_pos()])
+                        # print(dists)
                         next_location = curr
                         possible_leak.remove(curr)
                         next_location.make_color(BROWN)
@@ -516,24 +521,22 @@ def Bot1(win, width, ROWS, square):
             start.reset()
             total_actions += distance
             start = next_location
-            if(start == random_leak):
-                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+            if (start == random_leak):
+                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak.plugged()
-                #random_leak.reset()
-            if(start == random_leak2):
-                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                # random_leak.reset()
+            if (start == random_leak2):
+                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak2.plugged()
-                #random_leak2.reset()
-
-
+                # random_leak2.reset()
 
             # for cell in det_square:
             #     cell.make_color(GREY)
 
             draw(win, grid, ROWS, width)
-            #time = False
+            # time = False
         run = False
     pygame.quit()
     return total_actions
