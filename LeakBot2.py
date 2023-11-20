@@ -335,9 +335,9 @@ def make_ship(draw, grid, rows, square):
                 detection_square_spots.add(grid[x+i][y+j])
 
     try:
-        random_leak = random.choice(list(white - detection_square_spots))
+        random_leak = random.choice(list(white - detection_square_spots - {random_bot}))
     except:
-        random_leak = random.choice(list(white))
+        random_leak = random.choice(list(white - {random_bot}))
     random_leak.make_end()
 
     return (white, random_bot, random_leak)

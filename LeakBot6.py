@@ -345,7 +345,7 @@ def make_ship(draw, grid, rows, square):
                 detection_square_spots.add(grid[x+i][y+j])
 
     random_leak = random.choice(list(white - detection_square_spots))
-    random_leak2 = random.choice(list(white - {random_leak}))
+    random_leak2 = random.choice(list(white - {detection_square_spots} - {random_leak}))
     #random_leak.make_end()
     random_leak.make_color(ORANGE)
     random_leak2.make_color(ORANGE)

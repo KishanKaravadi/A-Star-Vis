@@ -344,8 +344,8 @@ def make_ship(draw, grid, rows, square):
     random_bot = random.choice(list(white))
     random_bot.make_start()
 
-    random_leak = random.choice(list(white))
-    random_leak2 = random.choice(list(white - {random_leak}))
+    random_leak = random.choice(list(white - {random_bot}))
+    random_leak2 = random.choice(list(white  - {random_bot} - {random_leak}))
     # random_leak2 = random.choice(list(white - {random_leak}))
     random_leak.make_end()
 
@@ -748,7 +748,7 @@ def run_bot3(alpha):
     # pygame.init()
     # WIN = pygame.display.set_mode((WIDTH, WIDTH))
     # pygame.display.set_caption("Leak Finding Algorithm")
-    ROWS = 30
+    ROWS = 8
     total_actions = 0
     count = 0
     for i in range(1):
