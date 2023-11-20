@@ -386,7 +386,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
     # for key, value in dists:
     #     print(type(key), type(value))
 
-    may_contain_leak = may_contain_leak - {random_bot}
+    # may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
 
@@ -398,14 +398,14 @@ def Bot8(win, width, ROWS, square, ALPHA):
             if j != i:
                 probabilities[(i.get_pos(), j.get_pos())] = 1 / \
                     (len(may_contain_leak)**2)
-    print(len(probabilities))
+    # print(len(probabilities))
     # probabilities[start.get_pos()] = 0
 
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
 
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-        print(len(probability_matrix))
-        print("thinkgin")
+        # print(len(probability_matrix))
+        # print("thinkgin")
         for (key, key2) in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
@@ -418,17 +418,20 @@ def Bot8(win, width, ROWS, square, ALPHA):
                 denom -= (probability_matrix[(key2, bot_location)] +
                           probability_matrix[(bot_location, key2)])
             # if denom != 0 and not math.isinf(denom):
-            probability_matrix[(key, key2)] = probability_matrix[(
-                key, key2)] / denom
+            try:
+                probability_matrix[(key, key2)] = probability_matrix[(
+                    key, key2)] / denom
+            except:
+                return False, probability_matrix
 
         for cell in may_contain_leak:
             if cell != bot_location:
                 probability_matrix[(cell.get_pos(), bot_location)] = 0
                 probability_matrix[(bot_location, cell.get_pos())] = 0
-        return probability_matrix
+        return True, probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
-        print("beep doing")
+        # print("beep doing")
         for cell in may_contain_leak:
             if cell != bot_location:
                 probability_matrix[(cell.get_pos(), bot_location)] = 0
@@ -454,7 +457,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
         return probability_matrix
 
     def no_beep_probability_update(probability_matrix, bot_location):
-        print("Beep boop")
+        # print("Beep boop")
         for cell in may_contain_leak:
             if cell != bot_location:
                 probability_matrix[(cell.get_pos(), bot_location)] = 0
@@ -537,13 +540,13 @@ def Bot8(win, width, ROWS, square, ALPHA):
 
         if time:
             next_location = None
-            print(start.get_pos())
+            # print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
             counter = 0
 
             while (counter < 2):
                 # for _ in range(100):
-                print(sum(probabilities.values()))
+                # print(sum(probabilities.values()))
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
@@ -557,16 +560,16 @@ def Bot8(win, width, ROWS, square, ALPHA):
                     beep = (1 - ((1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) *
                                  (1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak2.get_pos())] - 1)))))
                     if beep:
-                        print("BEEPING")
+                        # print("BEEPING")
                         probabilities = beep_probability_update(
                             probabilities, start.get_pos())
                     else:
-                        print("NOT BEEPING")
+                        # print("NOT BEEPING")
                         probabilities = no_beep_probability_update(
                             probabilities, start.get_pos())
                     next_location = get_location_of_max_probability(
                         probabilities)
-                    print(next_location.get_pos())
+                    # print(next_location.get_pos())
                     # print(probabilities)
 
                     a, temp, came_from, came_to = algorithm(lambda: draw(win, grid, ROWS, width),
@@ -595,7 +598,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
                             if i.get_pos() == random_leak.get_pos():
                                 for cell in may_contain_leak:
                                     if cell != random_leak:
-                                        print("reached 2")
+                                        # print("reached 2")
                                         probabilities[(
                                             cell.get_pos(), random_leak.get_pos())] = 0
                                         probabilities[(
@@ -610,7 +613,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
                                 random_leak = random_leak2
                                 make_brown = False
 
-                                print("Leak 1")
+                                # print("Leak 1")
                                 counter += 1
                                 if counter == 2:
                                     time = False
@@ -632,7 +635,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
                                 random_leak2 = random_leak
                                 make_brown2 = False
 
-                                print("Leak 2")
+                                # print("Leak 2")
                                 counter += 1
                                 if counter == 2:
                                     time = False
@@ -641,7 +644,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
 
                             # return total_actions
                     if i.is_path() or i.get_pos() == next_location.get_pos():
-                        print("reached 3")
+                        # print("reached 3")
                         # MAKE NEXT LOCATION BROWN CASE CODE HERE!!!!!
                         if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
 
@@ -662,7 +665,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
                                 random_leak = random_leak2
                                 make_brown = False
 
-                                print("Leak 1")
+                                # print("Leak 1")
                                 counter += 1
                                 if counter == 2:
                                     time = False
@@ -684,7 +687,7 @@ def Bot8(win, width, ROWS, square, ALPHA):
                                 random_leak2 = random_leak
                                 make_brown2 = False
 
-                                print("Leak 2")
+                                # print("Leak 2")
                                 counter += 1
                                 if counter == 2:
                                     time = False
@@ -694,9 +697,12 @@ def Bot8(win, width, ROWS, square, ALPHA):
                         start.reset()
                         start = i
                         # print(start.get_pos())
-                        print("reached 4")
-                        probabilities = bot_enters_cell_probability_update(
+                        # print("reached 4")
+                        works, probabilities = bot_enters_cell_probability_update(
                             probabilities, start.get_pos())
+                        if not works:
+                            time = False
+                            run = False
                         # print("reached")
                         # probabilities[start.get_pos()] = 0
                         total_actions += 1
@@ -738,7 +744,7 @@ def run_bot3(alpha):
     ROWS = 30
     total_actions = 0
     count = 0
-    for i in range(15):
+    for i in range(1):
         try:
             total_actions += Bot8(WIN, WIDTH, ROWS, 3, alpha)
         except Exception as e:
@@ -758,7 +764,7 @@ def run_bot3(alpha):
 def main():
     success = defaultdict(int)
     alphas = [i / 1000 for i in range(1, 101)]
-    with ProcessPoolExecutor(max_workers=10) as executor:
+    with ProcessPoolExecutor(max_workers=7) as executor:
 
         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
         count = 0
@@ -783,7 +789,7 @@ def main():
     plt.xlabel('Alpha')
     plt.ylabel('Total Actions')
     plt.grid(False)
-    plt.savefig('bot_7.png')
+    plt.savefig('bot_8.png')
 
 
 if __name__ == "__main__":
