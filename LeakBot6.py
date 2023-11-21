@@ -486,14 +486,12 @@ def Bot6(width, ROWS, square):
             distance = 0
             dists[start.get_pos()] = 0
             while queue:
-
+                #Determine the next location the bot should move to
                 curr = queue.popleft()
                 if (not possible):
+                    #Try to find a next location where the next detection square does not overlap the current detection square
                     if ((curr in may_contain_leak) and not (curr in det_square2)):
                         best_location = curr
-                        # print("SDKJFHSKLDF")
-                        # for i in det_square2:
-                        # i.make_color(ORANGE)
                         break
 
                     if ((curr in may_contain_leak) and (next_location is None)):
@@ -505,6 +503,7 @@ def Bot6(width, ROWS, square):
 
                             queue.append(nei)
                 else:
+                    #Try to find a next location where the next detection square does not overlap the current detection square
                     if ((curr in possible_leak) and not (curr in det_square2)):
                         best_location = curr
                         break
@@ -524,37 +523,23 @@ def Bot6(width, ROWS, square):
             else:
                 may_contain_leak.remove(next_location)
             next_location.make_color(BROWN)
-            # pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
             next_location.make_start()
             start.reset()
             total_actions += distance
             start = next_location
             if (start == random_leak):
-                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak.plugged()
-                # random_leak.reset()
             if (start == random_leak2):
-                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak2.plugged()
-                # random_leak2.reset()
-
-            # for cell in det_square:
-            #     cell.make_color(GREY)
-
-            # draw(win, grid, ROWS, width)
-            # time = False
         run = False
-    # pygame.quit()
     return total_actions
 
 
 def main(width):
     WIDTH = 800
-    # WIN = pygame.display.set_mode((WIDTH, WIDTH))
-    # pygame.display.set_caption("Leak Finding Algorithm")
     ROWS = 30
 
     success = {}
@@ -568,11 +553,9 @@ def main(width):
                 print(f"Error in execution for alpha={k}: {e}", flush=True)
                 traceback.print_exc()
                 print("SKLDJFHLSDFH", flush=True)
-                # return 0
                 count -= 1
             count += 1
             print(count, flush=True)
-        # pygame.quit()
         print("FINISHED", k, flush=True)
         gc.collect()
         success[k] = total_actions/(count)

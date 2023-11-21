@@ -484,15 +484,12 @@ def Bot5(width, ROWS, square):
             while queue:
 
                 curr = queue.popleft()
+                #If the leak is not in the detection square determine the next location the bot should move to
                 if (not possible):
                     if ((curr in may_contain_leak)):
-                        # print(dists[curr.get_pos()])
-                        # print(dists)
                         next_location = curr
                         may_contain_leak.remove(curr)
                         next_location.make_color(BROWN)
-                        # draw(win, grid, ROWS, width)
-                        # draw()
                         break
 
                     for nei in curr.neighbors:
@@ -500,15 +497,12 @@ def Bot5(width, ROWS, square):
                             dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
                             queue.append(nei)
+                #If the leak is in the current detection square determine the next location the bot should move to
                 else:
                     if ((curr in possible_leak)):
-                        # print(dists[curr.get_pos()])
-                        # print(dists)
                         next_location = curr
                         may_contain_leak.remove(curr)
                         next_location.make_color(BROWN)
-                        # draw(win, grid, ROWS, width)
-                        # draw()
                         break
 
                     for nei in curr.neighbors:
@@ -517,28 +511,18 @@ def Bot5(width, ROWS, square):
 
                             queue.append(nei)
 
-            # pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
             next_location.make_start()
             start.reset()
             total_actions += distance
             start = next_location
             if (start == random_leak):
-                # print("NO WAY LEAK FOUND1!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak.plugged()
-                # random_leak.reset()
             if (start == random_leak2):
-                # print("NO WAY LEAK FOUND2!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak2.plugged()
-                # random_leak2.reset()
 
-            # for cell in det_square:
-            #     cell.make_color(GREY)
-
-            # draw(win, grid, ROWS, width)
-            # time = False
         run = False
     # pygame.quit()
     return total_actions
@@ -546,8 +530,6 @@ def Bot5(width, ROWS, square):
 
 def main(width):
     WIDTH = 800
-    # WIN = pygame.display.set_mode((WIDTH, WIDTH))
-    # pygame.display.set_caption("Leak Finding Algorithm")
     ROWS = 30
 
     success = {}
