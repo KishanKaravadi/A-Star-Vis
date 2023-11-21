@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 WIDTH = 800
-WIN = pygame.display.set_mode((WIDTH, WIDTH))
-pygame.display.set_caption("Leak Finding Algorithm")
+# WIN = pygame.display.set_mode((WIDTH, WIDTH))
+# pygame.display.set_caption("Leak Finding Algorithm")
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -75,7 +75,7 @@ class Spot:
     def reset(self):
         self.color = WHITE
         # self.path = False
-    
+
     def plugged(self):
         self.leak = False
 
@@ -184,7 +184,7 @@ def reconstruct_path(came_from, current, draw):
         hi += 1
         current = came_from[current]
         current.make_path()
-        draw()
+        # draw()
     return hi
 
 # Manhattan distance from point to end
@@ -214,9 +214,9 @@ def algorithm(draw, grid, start, end):
     open_set_hash = {start}
 
     while not open_set.empty():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
 
         current = open_set.get()[2]
         open_set_hash.remove(current)
@@ -348,9 +348,11 @@ def make_ship(draw, grid, rows, square):
             if (0 <= x+i < len(grid) and 0 <= y+j < len(grid[0])):
                 detection_square_spots.add(grid[x+i][y+j])
 
-    random_leak = random.choice(list(white - detection_square_spots - {random_bot}))
-    random_leak2 = random.choice(list(white - detection_square_spots - {random_leak} - {random_bot}))
-    #random_leak.make_end()
+    random_leak = random.choice(
+        list(white - detection_square_spots - {random_bot}))
+    random_leak2 = random.choice(
+        list(white - detection_square_spots - {random_leak} - {random_bot}))
+    # random_leak.make_end()
     random_leak.make_color(ORANGE)
     random_leak2.make_color(ORANGE)
 
@@ -383,8 +385,9 @@ def infinity():
     return float('inf')
 
 
-def Bot1(win, width, ROWS, square):
+def Bot6(width, ROWS, square):
     square = (square * 2)+1
+
     def check_square(spot, leak, leak2, square):
         x, y = spot.get_pos()
         det_square = set()
@@ -421,7 +424,7 @@ def Bot1(win, width, ROWS, square):
                         dists[(l, spot)] = dist
         return dists
 
-    #assert square >= 3
+    # assert square >= 3
     grid = make_grid(ROWS, width)
 
     may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
@@ -430,7 +433,7 @@ def Bot1(win, width, ROWS, square):
     may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
-    #end = random_leak
+    # end = random_leak
 
     for row in grid:
         for spot in row:
@@ -445,10 +448,10 @@ def Bot1(win, width, ROWS, square):
             for spot in row:
                 spot.update_neighbors(grid)
                 spot.update_unres_neighbors(grid)
-        draw(win, grid, ROWS, width)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+        # draw(win, grid, ROWS, width)
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         run = False
 
         # if time:
 
@@ -461,9 +464,9 @@ def Bot1(win, width, ROWS, square):
 
             a, det_square2, b = check_square(
                 start, random_leak, random_leak2, (square*2)-1)
-            #print(leak_present, " LEAK STATUS")
+            # print(leak_present, " LEAK STATUS")
             total_actions += 1
-            #print(leak_present)
+            # print(leak_present)
             # Update may contain leak set
             if (not leak_present):
                 may_contain_leak = may_contain_leak - det_square
@@ -485,14 +488,14 @@ def Bot1(win, width, ROWS, square):
             while queue:
 
                 curr = queue.popleft()
-                if(not possible):
-                    if ((curr in may_contain_leak) and not (curr in det_square2)):       
+                if (not possible):
+                    if ((curr in may_contain_leak) and not (curr in det_square2)):
                         best_location = curr
-                        #print("SDKJFHSKLDF")
-                        #for i in det_square2:
-                            #i.make_color(ORANGE)
+                        # print("SDKJFHSKLDF")
+                        # for i in det_square2:
+                        # i.make_color(ORANGE)
                         break
-                    
+
                     if ((curr in may_contain_leak) and (next_location is None)):
                         next_location = curr
 
@@ -502,10 +505,10 @@ def Bot1(win, width, ROWS, square):
 
                             queue.append(nei)
                 else:
-                    if ((curr in possible_leak) and not (curr in det_square2)):     
+                    if ((curr in possible_leak) and not (curr in det_square2)):
                         best_location = curr
                         break
-                    if ((curr in possible_leak) and (next_location is None)):     
+                    if ((curr in possible_leak) and (next_location is None)):
                         next_location = curr
 
                     for nei in curr.neighbors:
@@ -513,48 +516,80 @@ def Bot1(win, width, ROWS, square):
                             dists[nei.get_pos()] = dists[curr.get_pos()]+1
 
                             queue.append(nei)
-            
-            if(not(best_location is None)):
+
+            if (not (best_location is None)):
                 next_location = best_location
-            if(not possible):
+            if (not possible):
                 may_contain_leak.remove(next_location)
             else:
                 may_contain_leak.remove(next_location)
             next_location.make_color(BROWN)
-            pygame.time.delay(1000)
+            # pygame.time.delay(1000)
             distance = dists[next_location.get_pos()]
             next_location.make_start()
             start.reset()
             total_actions += distance
             start = next_location
-            if(start == random_leak):
-                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+            if (start == random_leak):
+                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak.plugged()
-                #random_leak.reset()
-            if(start == random_leak2):
-                #print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
+                # random_leak.reset()
+            if (start == random_leak2):
+                # print("NO WAY LEAK FOUND!!!!!!!!!!!!!!!!!!")
                 counter += 1
                 random_leak2.plugged()
-                #random_leak2.reset()
-
-
+                # random_leak2.reset()
 
             # for cell in det_square:
             #     cell.make_color(GREY)
 
-            draw(win, grid, ROWS, width)
-            #time = False
+            # draw(win, grid, ROWS, width)
+            # time = False
         run = False
-    pygame.quit()
+    # pygame.quit()
     return total_actions
 
 
-def main(win, width):
-    ROWS = 10
-    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
-    actions = Bot1(win, width,  ROWS, 1)
-    print(actions)
+def main(width):
+    WIDTH = 800
+    # WIN = pygame.display.set_mode((WIDTH, WIDTH))
+    # pygame.display.set_caption("Leak Finding Algorithm")
+    ROWS = 30
+
+    success = {}
+    for k in range(1, 16):
+        total_actions = 0
+        count = 0
+        for i in range(150):
+            try:
+                total_actions += Bot6(width,  ROWS, k)
+            except Exception as e:
+                print(f"Error in execution for alpha={k}: {e}", flush=True)
+                traceback.print_exc()
+                print("SKLDJFHLSDFH", flush=True)
+                # return 0
+                count -= 1
+            count += 1
+            print(count, flush=True)
+        # pygame.quit()
+        print("FINISHED", k, flush=True)
+        gc.collect()
+        success[k] = total_actions/(count)
+
+    k, total_actions = zip(*sorted(success.items()))
+
+    # Convert to NumPy arrays
+    k = np.array(k)
+    total_actions = np.array(total_actions)
+
+    # Create the plot
+    plt.scatter(k, total_actions, marker='o', linestyle='-', color='b')
+    plt.title('K vs Total Actions')
+    plt.xlabel('K')
+    plt.ylabel('Total Actions')
+    plt.grid(False)
+    plt.savefig('bot_6.png')
 
 
-main(WIN, WIDTH)
+main(WIDTH)
