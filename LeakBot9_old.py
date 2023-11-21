@@ -2,10 +2,8 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import concurrent.futures
 from collections import defaultdict, deque
-import gc
 import math
-import traceback
-# import pygame
+import pygame
 import random
 from queue import PriorityQueue
 import concurrent.futures
@@ -13,13 +11,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 WIDTH = 800
-# pygame.init()
-# WIN = pygame.display.set_mode((WIDTH, WIDTH))
-# pygame.display.set_caption("Leak Finding Algorithm")
+WIN = pygame.display.set_mode((WIDTH, WIDTH))
+pygame.display.set_caption("Leak Finding Algorithm")
 
-E = math.e
+E = 2.718281828459045
 FPS = 60
-# clock = pygame.time.Clock()
+clock = pygame.time.Clock()
 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -215,9 +212,9 @@ def algorithm(draw, grid, start, end):
     open_set_hash = {start}
 
     while not open_set.empty():
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         pygame.quit()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
 
         current = open_set.get()[2]
         open_set_hash.remove(current)
@@ -344,8 +341,8 @@ def make_ship(draw, grid, rows, square):
     random_bot = random.choice(list(white))
     random_bot.make_start()
 
-    random_leak = random.choice(list(white - {random_bot}))
-    random_leak2 = random.choice(list(white - {random_bot} - {random_leak}))
+    random_leak = random.choice(list(white))
+    random_leak2 = random.choice(list(white - {random_leak}))
     # random_leak2 = random.choice(list(white - {random_leak}))
     random_leak.make_end()
 
@@ -375,11 +372,19 @@ def infinity():
     return float('inf')
 
 
-def Bot8(width, ROWS, square, ALPHA):
+def Bot3(win, width, ROWS, square, ALPHA):
+
+    # assert square >= 3
     grid = make_grid(ROWS, width)
 
     may_contain_leak, random_bot, random_leak, random_leak2 = make_ship(
         lambda: draw(win, grid, ROWS, width), grid, ROWS, square=square)
+
+    # dists = create_dist_matrix(may_contain_leak)
+    # for key, value in dists:
+    #     print(type(key), type(value))
+
+    may_contain_leak = may_contain_leak - {random_bot}
 
     start = random_bot
 
@@ -388,55 +393,54 @@ def Bot8(width, ROWS, square, ALPHA):
     probabilities = {}
     for i in may_contain_leak:
         for j in may_contain_leak:
-            if j != i:
-                probabilities[(i.get_pos(), j.get_pos())] = 1 / \
-                    (len(may_contain_leak)**2)
+            if j!=i:
+                probabilities[(i.get_pos(),j.get_pos())] = 1/(len(may_contain_leak)**2)
+                print(len())
+    print(len(probabilities))
+    print(len(may_contain_leak))
+    # probabilities[start.get_pos()] = 0
 
 # for each sense function, set the bot_location( current location of bot), probability of leak to 0, since we have already visited it
-#we want to store probabilities for pairs of cells containing both leaks now
+
     def bot_enters_cell_probability_update(probability_matrix, bot_location):
-        for (key, key2) in probability_matrix:
+        print(len(probability_matrix))
+        for (key,key2) in probability_matrix:
             # key is position of cell j we want to calculate updated probability for
             # key 2 is position of every other cell j', used for summation stored in denom
             denom = 1
 
             if key != bot_location:
-                denom -= (probability_matrix[(key, bot_location)] +
-                          probability_matrix[(bot_location, key)])
+                denom -= (probability_matrix[(key,bot_location)] + probability_matrix[(bot_location, key)])
             if key2 != bot_location:
-                denom -= (probability_matrix[(key2, bot_location)] +
-                          probability_matrix[(bot_location, key2)])
-            try:
-                probability_matrix[(key, key2)] = probability_matrix[(
-                    key, key2)] / denom
-            except:
-                return False, probability_matrix
-
+                denom -= (probability_matrix[(key2,bot_location)] + probability_matrix[(bot_location, key2)])
+            # if denom != 0 and not math.isinf(denom):
+            probability_matrix[(key,key2)] = probability_matrix[(key,key2)] / denom
+        
         for cell in may_contain_leak:
             if cell != bot_location:
-                probability_matrix[(cell.get_pos(), bot_location)] = 0
+                probability_matrix[(cell.get_pos(),bot_location)] = 0
                 probability_matrix[(bot_location, cell.get_pos())] = 0
-        return True, probability_matrix
+        return probability_matrix
 
     def beep_probability_update(probability_matrix, bot_location):
         for cell in may_contain_leak:
             if cell != bot_location:
-                probability_matrix[(cell.get_pos(), bot_location)] = 0
+                probability_matrix[(cell.get_pos(),bot_location)] = 0
                 probability_matrix[(bot_location, cell.get_pos())] = 0
-        # key is j, key 2 is k, key 4 is j', key 3 is k' bot_location is i
-
+        #key is j, key 2 is k, key 4 is j', key 3 is k' bot_location is i
         denom = sum(
-            probability_matrix[(key4, key3)] *
-            (1 - ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key4)] - 1))) *
-                  (1 - E**((-1 * ALPHA) * (dists[(bot_location, key3)] - 1)))))
-            for (key4, key3) in probability_matrix
-            if key3 != bot_location and key4 != bot_location and key3 != key4
-        )
-        for (key, key2) in probability_matrix:
+                probability_matrix[(key4,key3)] * 
+                (1 - ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key4)] - 1))) * 
+                      (1 - E**((-1 * ALPHA) * (dists[(bot_location, key3)] - 1)))))
+                for (key4,key3) in probability_matrix
+                if key3 != bot_location and key4 != bot_location and key3 != key4
+            )
+        for (key,key2) in probability_matrix:
+            #print((key,key2))
             if denom != 0 and not math.isinf(denom) and key != bot_location and key2 != bot_location:
-                probability_matrix[(key, key2)] = (
-                    probability_matrix[(key, key2)] *
-                    (1 - ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1))) *
+                probability_matrix[(key,key2)] = (
+                    probability_matrix[(key,key2)] * 
+                    (1 - ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1))) * 
                           (1 - E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1)))))
                 ) / denom
 
@@ -445,21 +449,23 @@ def Bot8(width, ROWS, square, ALPHA):
     def no_beep_probability_update(probability_matrix, bot_location):
         for cell in may_contain_leak:
             if cell != bot_location:
-                probability_matrix[(cell.get_pos(), bot_location)] = 0
+                probability_matrix[(cell.get_pos(),bot_location)] = 0
                 probability_matrix[(bot_location, cell.get_pos())] = 0
-        # key is j, key 2 is k, key 4 is j', key 3 is k' bot_location is i
+        #key is j, key 2 is k, key 4 is j', key 3 is k' bot_location is i
         denom = sum(
-            probability_matrix[(key4, key3)] *
-            ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key4)] - 1))) *
-             (1 - E**((-1 * ALPHA) * (dists[(bot_location, key3)] - 1))))
-            for (key4, key3) in probability_matrix
-            if key3 != bot_location and key4 != bot_location and key3 != key4
-        )
-        for (key, key2) in probability_matrix:
-            if denom != 0 and not math.isinf(denom) and key != bot_location and key2 != bot_location:
-                probability_matrix[(key, key2)] = (
-                    probability_matrix[(key, key2)] *
-                    ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1))) *
+                probability_matrix[(key4,key3)] * 
+                ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key4)] - 1))) * 
+                 (1 - E**((-1 * ALPHA) * (dists[(bot_location, key3)] - 1))))
+                for (key4,key3) in probability_matrix
+                if key3 != bot_location and key4!= bot_location and key3 != key4
+            )
+        for (key,key2) in probability_matrix:
+            #print((key,key2))
+            #print("h")
+            if denom != 0 and not math.isinf(denom) and key != bot_location and key2!= bot_location:
+                probability_matrix[(key,key2)] = (
+                    probability_matrix[(key,key2)] * 
+                    ((1 - E**((-1 * ALPHA) * (dists[(bot_location, key)] - 1))) * 
                      (1 - E**((-1 * ALPHA) * (dists[(bot_location, key2)] - 1))))
                 ) / denom
         return probability_matrix
@@ -471,8 +477,7 @@ def Bot8(width, ROWS, square, ALPHA):
         for key, probability in probability_matrix.items():
             if probability > max_probability:
                 max_probability = probability
-                # Assuming key is of format (spot.get_pos(), spot2.get_pos())
-                max_location = key[0]
+                max_location = key[0]  # Assuming key is of format (spot.get_pos(), spot2.get_pos())
 
         # Assuming grid is the 2D list of Spot objects
         row, col = max_location
@@ -488,230 +493,267 @@ def Bot8(width, ROWS, square, ALPHA):
     time = True
     total_actions = 0
 
-    queue = deque()
-    dists = defaultdict(infinity)
-
-    for og_nei in may_contain_leak:
-        queue.append(og_nei)
-        dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
-        while queue:
-            curr = queue.popleft()
-            for nei in curr.neighbors:
-                if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
-                    continue
-                else:
-                    dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
-                        og_nei.get_pos(), curr.get_pos())]+1
-                    dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
-                        og_nei.get_pos(), nei.get_pos())]
-                    queue.append(nei)
-
     while run:
-        # clock.tick(FPS)
+        clock.tick(FPS)
         for row in grid:
             for spot in row:
                 spot.update_neighbors(grid)
                 spot.update_unres_neighbors(grid)
+        # draw(win, grid, ROWS, width)#Here
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
         make_brown = True
         make_brown2 = True
 
         if time:
             next_location = None
+            print(start.get_pos())
             # pseudocode: while bot_location != leak_location:
             counter = 0
 
+            queue = deque()
+            dists = defaultdict(infinity)
+            for og_nei in may_contain_leak:
+                        queue.append(og_nei)
+                        dists[(og_nei.get_pos(), og_nei.get_pos())] = 0
+                        while queue:
+                            curr = queue.popleft()
+
+                            for nei in curr.neighbors:
+                                if dists[(og_nei.get_pos(), nei.get_pos())] != float('inf'):
+                                    continue
+                                else:
+                                    dists[(og_nei.get_pos(), nei.get_pos())] = dists[(
+                                        og_nei.get_pos(), curr.get_pos())]+1
+                                    dists[(nei.get_pos(), og_nei.get_pos())] = dists[(
+                                        og_nei.get_pos(), nei.get_pos())]
+
+                                    queue.append(nei)
+
             while (counter < 2):
+                # for _ in range(100):
+                print(sum(probabilities.values()))
+                
 
                 # Find next spot to explore
                 sense_again = all(not i.is_path() for i in start.neighbors)
-                if sense_again:
-                    total_actions += 1
 
+                # if not next_location or start.get_pos() == next_location.get_pos():
+                if sense_again:
+                    
+                    #print("reached")
+                    total_actions += 1
+                    
                     W1 = 1
+                    W2 = 1
                     if not make_brown:
                         W1 = 0
+                        W2 = 1
                     elif not make_brown2:
                         W1 = 1
                         W2 = 0
                     else:
-                        if total_actions > 300:
-                            W1 = (total_actions - 300) / total_actions
-
-                    # we now account for changes in probabilities of hearing a beep to factor in the fact that there are two leaks
-                    #this is done by considering pairs of cells where leaks may be and considering the probability of that
-                    beep = (1 - ((1 - W1*E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) *
-                                (1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak2.get_pos())] - 1)))))
+                        if total_actions > 20:
+                            W1 = total_actions - 20
+                            W2 = 1/ W2
+                    print(W1,W2)
+                    beep = (1 - ((1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak.get_pos())] - 1))) * 
+                      (1 - E**((-1 * ALPHA) * (dists[(start.get_pos(), random_leak2.get_pos())] - 1)))))
                     if beep:
+                        print("BEEPING")
                         probabilities = beep_probability_update(
                             probabilities, start.get_pos())
                     else:
+                        print("NOT BEEPING")
                         probabilities = no_beep_probability_update(
                             probabilities, start.get_pos())
                     next_location = get_location_of_max_probability(
                         probabilities)
+                    print(next_location.get_pos())
+                    # print(probabilities)
 
                     a, temp, came_from, came_to = algorithm(lambda: draw(win, grid, ROWS, width),
                                                             grid, start, next_location)
+                    # total_actions += temp
+                    # print(len(came_from))
 
+                # get path from bot location to the next location found
+
+                # while i!= next_location:
+                # i = came_to[start]
                 if make_brown:
                     random_leak.make_color(BROWN)
                 if make_brown2:
                     random_leak2.make_color(BROWN)
 
+                # print(i.get_pos(), start.get_pos())
+
                 for i in start.neighbors:
-                    if i.is_path() or i.get_pos() == next_location.get_pos():
-                        if i.get_pos() == random_leak.get_pos() or i.get_pos() == random_leak2.get_pos():
-
-                            if i.get_pos() == random_leak.get_pos():
-                                for cell in may_contain_leak:
-                                    if cell != random_leak:
-                                        probabilities[(
-                                            cell.get_pos(), random_leak.get_pos())] = 0
-                                        probabilities[(
-                                            random_leak.get_pos(), cell.get_pos())] = 0
-                                may_contain_leak = may_contain_leak - \
-                                    {random_leak}
-                                for k in may_contain_leak:
-                                    for l in may_contain_leak:
-                                        probabilities[(k.get_pos(), l.get_pos(
-                                        ))] = 1/(len(may_contain_leak)**2)
-                                random_leak = random_leak2
-                                make_brown = False
-                                counter += 1
-                                if counter == 2:
-                                    time = False
-                                    run = False
-                            elif i.get_pos() == random_leak2.get_pos():
-                                for cell in may_contain_leak:
-                                    if cell != random_leak2:
-                                        probabilities[(
-                                            cell.get_pos(), random_leak2.get_pos())] = 0
-                                        probabilities[(
-                                            random_leak2.get_pos(), cell.get_pos())] = 0
-                                may_contain_leak = may_contain_leak - \
-                                    {random_leak2}
-                                for k in may_contain_leak:
-                                    for l in may_contain_leak:
-                                        probabilities[(k.get_pos(), l.get_pos(
-                                        ))] = 1/(len(may_contain_leak)**2)
-                                random_leak2 = random_leak
-                                make_brown2 = False
-                                counter += 1
-                                if counter == 2:
-                                    time = False
-                                    run = False
-                        #move bot
-                        i.make_start()
-                        start.reset()
-                        start = i
-
-                        works, probabilities = bot_enters_cell_probability_update(
-                            probabilities, start.get_pos())
-                        if not works:
-                            time = False
-                            run = False
-                        total_actions += 1
-                    elif i.get_pos() == random_leak.get_pos() or i.get_pos() == random_leak2.get_pos():
+                    if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
                         browncount = 0
                         for j in i.neighbors:
-                            if j.is_path() or j.get_pos() == start.get_pos() or j.get_pos() == next_location.get_pos() or j.get_color() == BROWN:
+                            if j.is_path() or j.get_pos()==start.get_pos() or j.get_pos()==next_location.get_pos():
                                 browncount += 1
-                        if browncount >= 2:
+                        if browncount == 2:
                             if i.get_pos() == random_leak.get_pos():
                                 for cell in may_contain_leak:
                                     if cell != random_leak:
-                                        probabilities[(
-                                            cell.get_pos(), random_leak.get_pos())] = 0
-                                        probabilities[(
-                                            random_leak.get_pos(), cell.get_pos())] = 0
-                                may_contain_leak = may_contain_leak - \
-                                    {random_leak}
+                                        print("reached 2")
+                                        probabilities[(cell.get_pos(),random_leak.get_pos())] = 0
+                                        probabilities[(random_leak.get_pos(), cell.get_pos())] = 0
+                                
+                                may_contain_leak = may_contain_leak - {random_leak}
                                 for k in may_contain_leak:
                                     for l in may_contain_leak:
-                                        probabilities[(k.get_pos(), l.get_pos(
-                                        ))] = 1/(len(may_contain_leak)**2)
+                                        probabilities[(k.get_pos(),l.get_pos())] = 1/(len(may_contain_leak)**2)
                                 random_leak = random_leak2
                                 make_brown = False
-                                counter += 1
-                                if counter == 2:
-                                    time = False
-                                    run = False
+                            
+                                print("Leak 1")
+                                counter+=1
+                                if counter ==2:
+                                    return total_actions
                             elif i.get_pos() == random_leak2.get_pos():
                                 for cell in may_contain_leak:
                                     if cell != random_leak2:
-                                        probabilities[(
-                                            cell.get_pos(), random_leak2.get_pos())] = 0
-                                        probabilities[(
-                                            random_leak2.get_pos(), cell.get_pos())] = 0
-                                may_contain_leak = may_contain_leak - \
-                                    {random_leak2}
+                                        probabilities[(cell.get_pos(),random_leak2.get_pos())] = 0
+                                        probabilities[(random_leak2.get_pos(), cell.get_pos())] = 0
+                                
+                                may_contain_leak = may_contain_leak - {random_leak2}
                                 for k in may_contain_leak:
                                     for l in may_contain_leak:
-                                        probabilities[(k.get_pos(), l.get_pos(
-                                        ))] = 1/(len(may_contain_leak)**2)
+                                        probabilities[(k.get_pos(),l.get_pos())] = 1/(len(may_contain_leak)**2)
                                 random_leak2 = random_leak
                                 make_brown2 = False
-                                counter += 1
-                                if counter == 2:
-                                    time = False
-                                    run = False
-                            return total_actions
+                            
+                                print("Leak 2")
+                                counter+=1
+                                if counter ==2:
+                                    return total_actions
+                            #return total_actions
+                    
+                            #return total_actions
+                    if i.is_path() or i.get_pos() == next_location.get_pos():
+                        #print("reached 3")
+                        #MAKE NEXT LOCATION BROWN CASE CODE HERE!!!!!
+                        if i.get_pos() == random_leak.get_pos() or random_leak2.get_pos():
+                        
+                            if i.get_pos() == random_leak.get_pos():
+                                for cell in may_contain_leak:
+                                    if cell != random_leak:
+                                        probabilities[(cell.get_pos(),random_leak.get_pos())] = 0
+                                        probabilities[(random_leak.get_pos(), cell.get_pos())] = 0
+                                
+                                may_contain_leak = may_contain_leak - {random_leak}
+                                for k in may_contain_leak:
+                                    for l in may_contain_leak:
+                                        probabilities[(k.get_pos(),l.get_pos())] = 1/(len(may_contain_leak)**2)
+                                random_leak = random_leak2
+                                make_brown = False
+                            
+                                print("Leak 1")
+                                counter+=1
+                                if counter ==2:
+                                    return total_actions
+                            elif i.get_pos() == random_leak2.get_pos():
+                                for cell in may_contain_leak:
+                                    if cell != random_leak2:
+                                        probabilities[(cell.get_pos(),random_leak2.get_pos())] = 0
+                                        probabilities[(random_leak2.get_pos(), cell.get_pos())] = 0
+                                
+                                may_contain_leak = may_contain_leak - {random_leak2}
+                                for k in may_contain_leak:
+                                    for l in may_contain_leak:
+                                        probabilities[(k.get_pos(),l.get_pos())] = 1/(len(may_contain_leak)**2)
+                                random_leak2 = random_leak
+                                make_brown2 = False
+                            
+                                print("Leak 2")
+                                counter+=1
+                                if counter ==2:
+                                    return total_actions
+                        i.make_start()
+                        # may_contain_leak = may_contain_leak - {i}
+                        start.reset()
+                        start = i
+                        # print(start.get_pos())
+                        #print("reached 4")
+                        probabilities = bot_enters_cell_probability_update(
+                            probabilities, start.get_pos())
+                        # print("reached")
+                        #probabilities[start.get_pos()] = 0
+                        total_actions += 1
+                # pygame.time.delay(1000)
+                draw(win, grid, ROWS, width)
             time = False
-            run = False
 
+    pygame.quit()
     return total_actions
 
-def run_bot3(alpha):
-    WIDTH = 800
-    ROWS = 8
-    total_actions = 0
-    count = 0
-    for i in range(1):
-        try:
-            total_actions += Bot8(WIDTH, ROWS, 3, alpha)
-        except Exception as e:
-            print(f"Error in execution for alpha={alpha}: {e}", flush=True)
-            traceback.print_exc()
-            print("SKLDJFHLSDFH", flush=True)
 
-            count -= 1
-        count += 1
-        print(count, flush=True)
-    print("FINISHED", alpha, flush=True)
-    gc.collect()
-    return total_actions/(count)
-
-
-def main():
+def main(win, width):
+    ROWS = 10
+    # make them return FAILED OR SUCCEEDED, ALSO PASS IN Q
+    # actions = Bot3(win, width,  ROWS, 3, 0.5)
+    # print(actions)
+    # actions = Bot3(win, width,  ROWS, 3, 0.5)
+    # print(actions)
     success = defaultdict(int)
-    alphas = [i / 200 for i in range(1, 21)]
-    with ProcessPoolExecutor(max_workers=3) as executor:
-
-        futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
-        count = 0
-        for future in as_completed(futures):
-            alpha = futures[future]
-            result = future.result()
-            success[alpha] += result
-            count += 1
-            print(count, alpha)
-
+    count_set = 0
+    # count = 0
+    for i in range(1, 2):
+        count_set += 1
+        print(count_set)
+        for _ in range(1):
+            # count += 1
+            # print(count)
+            success[i/10] += Bot3(win, width,  ROWS, 3, i/10)
     print(success)
 
-    alphas, total_actions = zip(*sorted(success.items()))
 
-    # Convert to NumPy arrays
-    alphas = np.array(alphas)
-    total_actions = np.array(total_actions)
+# Your existing main method
 
-    # Create the plot
-    plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
-    plt.title('Alpha vs Total Actions')
-    plt.xlabel('Alpha')
-    plt.ylabel('Total Actions')
-    plt.grid(False)
-    plt.savefig('bot_8.png')
+
+# def run_bot3(alpha):
+#     ROWS = 30
+#     total_actions = 0
+#     for _ in range(150):
+#         total_actions += Bot3(WIN, WIDTH, ROWS, 3, alpha)
+#     return total_actions/150
+
+
+# def main(WIN, WIDTH):
+#     success = defaultdict(int)
+
+#     with ProcessPoolExecutor(max_workers=5) as executor:
+#         alphas = [i / 200 for i in range(1, 21)]
+
+#         futures = {executor.submit(run_bot3, alpha): alpha for alpha in alphas}
+
+#         for future in as_completed(futures):
+#             alpha = futures[future]
+#             try:
+#                 result = future.result()
+#                 success[alpha] += result
+#             except Exception as e:
+#                 print(f"Error in execution for alpha={alpha}: {e}")
+
+#     print(success)
+#     alphas, total_actions = zip(*sorted(success.items()))
+
+#     # Convert to NumPy arrays
+#     alphas = np.array(alphas)
+#     total_actions = np.array(total_actions)
+
+#     # Create the plot
+#     plt.scatter(alphas, total_actions, marker='o', linestyle='-', color='b')
+#     plt.title('Alpha vs Total Actions')
+#     plt.xlabel('Alpha')
+#     plt.ylabel('Total Actions')
+#     plt.grid(True)
+#     plt.savefig('scatter_plot.png')
 
 
 if __name__ == "__main__":
-    main()
+    main(WIN, WIDTH)
